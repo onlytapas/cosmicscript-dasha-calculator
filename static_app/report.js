@@ -29,6 +29,11 @@
             return steps;
         }
 
+        function currentCycleYear(raw, today) {
+            const birthdayThisYear = engine.safeDate(today.getUTCFullYear(), raw.month, raw.day);
+            return today.getTime() >= birthdayThisYear.getTime() ? today.getUTCFullYear() : today.getUTCFullYear() - 1;
+        }
+
         function ageOn(date, birth) {
             let years = date.getUTCFullYear() - birth.getUTCFullYear();
             const dm = [date.getUTCMonth(), date.getUTCDate()], bm = [birth.getUTCMonth(), birth.getUTCDate()];
@@ -120,7 +125,7 @@
             return { periods, current, timeline };
         }
 
-        function antardasha(raw, today) {
+        function antardasha(raw, cycleYear) {
             const rootNum = raw.calc.root;
             const reducedMonth = raw.calc.reduced_month;
             const rows = raw.antardasha_data.map((a) => {
@@ -135,13 +140,13 @@
                     steps: reductionSteps(a.sum, [a.P, number]),
                     number,
                     planet: PLANETS[number],
-                    is_current: a.year === today.getUTCFullYear(),
+                    is_current: a.year === cycleYear,
                 };
             });
             return { rows, root: rootNum, reduced_month: reducedMonth, current: rows.find((r) => r.is_current) || null };
         }
 
-        function reviewYears(raw, today) {
+        function reviewYears(raw, today, cycleYear) {
             const t = today.getTime();
             return raw.review_years.map((ry) => {
                 const totalDays = ry.pratyantar.reduce((s, p) => s + (p.end.getTime() - p.start.getTime()) / DAY_MS + 1, 0) || 1;
@@ -165,7 +170,7 @@
                     cells: gridCells(ry.grid),
                     pratyantar: prats,
                     active_pratyantar: prats.find((p) => p.is_active) || null,
-                    is_current: ry.year === today.getUTCFullYear(),
+                    is_current: ry.year === cycleYear,
                 };
             });
         }
@@ -177,10 +182,10 @@
             const destiny = raw.calc.destiny;
             const birth = raw.birth_date;
 
+            const cycleYear = currentCycleYear(raw, today);
             const maha = mahaDasha(raw, today);
-            const antar = antardasha(raw, today);
-            const years = reviewYears(raw, today);
-            const currentYear = years.find((y) => y.is_current) || null;
+            const antar = antardasha(raw, cycleYear);
+            const years = reviewYears(raw, today, cycleYear);
             const natal = raw.natal_grid;
             const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -208,7 +213,7 @@
                 now: {
                     maha: maha.current,
                     antar: antar.current,
-                    pratyantar: currentYear ? currentYear.active_pratyantar : null,
+                    pratyantar: (years.find((y) => y.active_pratyantar) || { active_pratyantar: null }).active_pratyantar,
                 },
                 planets: PLANETS,
             };

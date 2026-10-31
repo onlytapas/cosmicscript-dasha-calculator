@@ -34,6 +34,13 @@ def test_build_report_core_numbers_and_explanations():
         assert abs(sum(p["width"] for p in row["segments"]) - 100) < 0.5
 
 
+def test_now_markers_follow_the_birthday_year():
+    r = build_report(28, 12, 1995, "", today=TODAY)
+    assert r["antar"]["current"]["year"] == 2025
+    assert [y["year"] for y in r["years"] if y["is_current"]] == [2025]
+    assert r["now"]["pratyantar"] is not None and r["now"]["pratyantar"]["is_active"]
+
+
 def test_parse_birth_date_messages():
     assert parse_birth_date(29, 2, 2004).day == 29
     with pytest.raises(ValueError, match="does not exist"):

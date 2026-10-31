@@ -13,7 +13,7 @@ from typing import Optional
 
 from numerology import interpretations as text
 from numerology.constants import GRID_LAYOUT, MONTH_NAMES, MONTH_NAMES_SHORT, PLANETS, Planet
-from numerology.engine import digit_sum_once, generate_full_report
+from numerology.engine import digit_sum_once, generate_full_report, safe_date
 
 
 # --------------------------------------------------------------------------- #
@@ -47,6 +47,12 @@ def reduction_steps(value: int, results: list[int]) -> list[dict]:
             steps.append({"expression": digits_added(current), "result": result})
         current = result
     return steps
+
+
+def current_cycle_year(raw: dict, today: datetime) -> int:
+    """The birthday-year (birthday to next birthday) that contains ``today``."""
+    birthday_this_year = safe_date(today.year, raw["month"], raw["day"])
+    return today.year if today >= birthday_this_year else today.year - 1
 
 
 def age_on(date: datetime, birth: datetime) -> int:
@@ -172,7 +178,7 @@ def _maha_dasha(raw: dict, today: datetime) -> dict:
     return {"periods": periods, "current": current, "timeline": timeline}
 
 
-def _antardasha(raw: dict, today: datetime) -> dict:
+def _antardasha(raw: dict, cycle_year: int) -> dict:
     root = raw["calc"]["root"]
     reduced_month = raw["calc"]["reduced_month"]
     rows = []
@@ -188,7 +194,7 @@ def _antardasha(raw: dict, today: datetime) -> dict:
             "steps": reduction_steps(a["sum"], [a["P"], number]),
             "number": number,
             "planet": PLANETS[number],
-            "is_current": a["year"] == today.year,
+            "is_current": a["year"] == cycle_year,
         })
     return {
         "rows": rows,
@@ -198,7 +204,7 @@ def _antardasha(raw: dict, today: datetime) -> dict:
     }
 
 
-def _review_years(raw: dict, today: datetime) -> list[dict]:
+def _review_years(raw: dict, today: datetime, cycle_year: int) -> list[dict]:
     years = []
     for ry in raw["review_years"]:
         prats = []
@@ -222,7 +228,7 @@ def _review_years(raw: dict, today: datetime) -> list[dict]:
             "cells": _grid_cells(ry["grid"]),
             "pratyantar": prats,
             "active_pratyantar": next((p for p in prats if p["is_active"]), None),
-            "is_current": ry["year"] == today.year,
+            "is_current": ry["year"] == cycle_year,
         })
     return years
 
@@ -239,10 +245,10 @@ def build_report(day: int, month: int, year: int, client_name: str = "",
     destiny = raw["calc"]["destiny"]
     birth = raw["birth_date"]
 
+    cycle_year = current_cycle_year(raw, today)
     maha = _maha_dasha(raw, today)
-    antar = _antardasha(raw, today)
-    years = _review_years(raw, today)
-    current_year = next((y for y in years if y["is_current"]), None)
+    antar = _antardasha(raw, cycle_year)
+    years = _review_years(raw, today, cycle_year)
 
     return {
         "client_name": client_name.strip(),
@@ -268,7 +274,7 @@ def build_report(day: int, month: int, year: int, client_name: str = "",
         "now": {
             "maha": maha["current"],
             "antar": antar["current"],
-            "pratyantar": current_year["active_pratyantar"] if current_year else None,
+            "pratyantar": next((y["active_pratyantar"] for y in years if y["active_pratyantar"]), None),
         },
         "planets": PLANETS,
     }
