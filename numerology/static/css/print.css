@@ -33,3 +33,8 @@ body.report { background: #fff; }
 .year-card { margin-bottom: 10px; }
 .letter-chip, .working { background: #fff; }
 .chaldean .used { background: #a9802c; color: #fff; }
+.n-frame { fill: #fff; }
+.south-grid td { background: #fff; }
+.dasha-block { background: #fff; }
+.dasha-block:not([open]) { display: none; }
+.prat-row details:not([open]) { display: none; }

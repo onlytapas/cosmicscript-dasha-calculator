@@ -87,7 +87,7 @@ def test_bundle_builds(tmp_path, monkeypatch):
     html = out.read_text()
     assert "window.COSMIC_DATA" in html and "createEngine" in html and "nunjucks" in html
     assert "ROOT_INTERPRETATIONS" in html and "report.html" in html
-    assert out.stat().st_size < 600_000
+    assert out.stat().st_size < 1_200_000
 
 
 @pytest.mark.parametrize("owner_name", NAMES, ids=lambda p: p[1])

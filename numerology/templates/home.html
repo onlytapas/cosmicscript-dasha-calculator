@@ -13,11 +13,12 @@
 
     <div class="entry-card" data-active-tab="{{ tab or 'dasha' }}">
         <div class="tabs" role="tablist">
-            <button type="button" class="tab" role="tab" data-tab="dasha" aria-selected="{{ 'true' if tab != 'name' else 'false' }}">Dasha Calculator</button>
+            <button type="button" class="tab" role="tab" data-tab="dasha" aria-selected="{{ 'true' if tab not in ['name', 'astro'] else 'false' }}">Dasha Calculator</button>
             <button type="button" class="tab" role="tab" data-tab="name" aria-selected="{{ 'true' if tab == 'name' else 'false' }}">Name Numerology</button>
+            <button type="button" class="tab" role="tab" data-tab="astro" aria-selected="{{ 'true' if tab == 'astro' else 'false' }}">Astrology</button>
         </div>
 
-        <form class="tab-panel {{ 'active' if tab != 'name' else '' }}" data-panel="dasha" action="{{ url_for('main.report') }}" method="get" autocomplete="off">
+        <form class="tab-panel {{ 'active' if tab not in ['name', 'astro'] else '' }}" data-panel="dasha" action="{{ url_for('main.report') }}" method="get" autocomplete="off">
             <h2 class="entry-heading">Dasha report from a date of birth</h2>
 
             <div class="field">
@@ -41,7 +42,7 @@
                 </div>
             </fieldset>
 
-            {% if error and tab != 'name' %}
+            {% if error and tab not in ['name', 'astro'] %}
             <p class="form-error" role="alert">{{ error }}</p>
             {% endif %}
 
@@ -73,9 +74,70 @@
 
             <button type="submit" class="btn-primary">✦ Analyse Name ✦</button>
         </form>
+
+        <form class="tab-panel {{ 'active' if tab == 'astro' else '' }}" data-panel="astro" action="{{ url_for('main.astro_report') }}" method="get" autocomplete="off">
+            <h2 class="entry-heading">Vedic birth chart &amp; Vimshottari Dasha</h2>
+
+            <div class="field">
+                <label for="astro-name">Name</label>
+                <input type="text" id="astro-name" name="name" placeholder="Full name" maxlength="80">
+            </div>
+
+            <fieldset class="field-row choice-row">
+                <legend>Gender</legend>
+                <label class="choice"><input type="radio" name="gender" value="female" checked> Female</label>
+                <label class="choice"><input type="radio" name="gender" value="male"> Male</label>
+            </fieldset>
+
+            <fieldset class="field-row">
+                <legend>Date of birth</legend>
+                <div class="field">
+                    <label for="astro-day">Day</label>
+                    <input type="number" id="astro-day" name="day" min="1" max="31" placeholder="DD" inputmode="numeric" required>
+                </div>
+                <div class="field">
+                    <label for="astro-month">Month</label>
+                    <input type="number" id="astro-month" name="month" min="1" max="12" placeholder="MM" inputmode="numeric" required>
+                </div>
+                <div class="field field-wide">
+                    <label for="astro-year">Year</label>
+                    <input type="number" id="astro-year" name="year" min="1900" max="2099" placeholder="YYYY" inputmode="numeric" required>
+                </div>
+            </fieldset>
+
+            <fieldset class="field-row">
+                <legend>Time of birth <span class="optional">24-hour clock</span></legend>
+                <div class="field">
+                    <label for="astro-hour">Hour</label>
+                    <input type="number" id="astro-hour" name="hour" min="0" max="23" placeholder="HH" inputmode="numeric" required>
+                </div>
+                <div class="field">
+                    <label for="astro-minute">Minute</label>
+                    <input type="number" id="astro-minute" name="minute" min="0" max="59" placeholder="MM" inputmode="numeric" required>
+                </div>
+            </fieldset>
+
+            <div class="field place-field">
+                <label for="astro-place">Place of birth</label>
+                <input type="text" id="astro-place" name="place" placeholder="Start typing the town or city" maxlength="120" required>
+                <ul class="suggestions" id="place-suggestions" hidden></ul>
+            </div>
+
+            <fieldset class="field-row choice-row">
+                <legend>Chart style</legend>
+                <label class="choice"><input type="radio" name="style" value="north" checked> North Indian</label>
+                <label class="choice"><input type="radio" name="style" value="south"> South Indian</label>
+            </fieldset>
+
+            {% if error and tab == 'astro' %}
+            <p class="form-error" role="alert">{{ error }}</p>
+            {% endif %}
+
+            <button type="submit" class="btn-primary">✦ Generate Birth Chart ✦</button>
+        </form>
     </div>
 
-    <p class="landing-foot">Root · Destiny · Natal Grid · Dasha Periods · Chaldean Name Numbers</p>
+    <p class="landing-foot">Numerology · Name Numbers · Birth Chart · Vimshottari Dasha</p>
 </main>
 {% endblock %}
 

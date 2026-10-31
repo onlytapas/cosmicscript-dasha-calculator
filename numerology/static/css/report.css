@@ -252,3 +252,48 @@ body.editing-off .edit-hint { display: none; }
 .chaldean th { width: 44px; padding: 6px 0; font-size: 12px; font-weight: 700; color: var(--gold); border-bottom: 1px solid var(--line); text-align: center; background: rgba(217, 180, 92, .06); }
 .chaldean td { width: 44px; height: 32px; text-align: center; font-size: 14px; color: var(--text-3); border-bottom: 1px solid var(--line-soft); }
 .chaldean .used { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background: var(--gold); color: #140c22; font-weight: 700; }
+
+/* ---------- Astrology report ---------- */
+.glance-word { font-size: 30px; line-height: 1.2; }
+.charts { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+.chart { flex: 1 1 300px; max-width: 420px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.n-frame { fill: rgba(10, 6, 18, .35); stroke: var(--gold); stroke-width: 1.5; }
+.n-lines { fill: none; stroke: var(--gold); stroke-width: 1; opacity: .8; }
+.n-sign { font-family: var(--font-ui); font-size: 10px; fill: var(--text-3); text-anchor: middle; dominant-baseline: middle; }
+.n-planets { font-family: var(--font-ui); font-size: 13px; font-weight: 700; fill: var(--gold-light); text-anchor: middle; dominant-baseline: middle; }
+.n-retro { font-size: 8px; fill: #ff8a80; baseline-shift: super; }
+.n-title { font-family: var(--font-display); font-size: 12px; fill: var(--text-3); text-anchor: middle; letter-spacing: 1px; }
+
+.south-grid { border-collapse: collapse; width: 100%; max-width: 420px; aspect-ratio: 1; table-layout: fixed; }
+.south-grid td { border: 1px solid var(--gold); height: 25%; vertical-align: top; padding: 4px 6px; position: relative; background: rgba(10, 6, 18, .35); }
+.south-grid td:empty { border: 0; background: transparent; }
+.s-center { text-align: center; vertical-align: middle !important; font-family: var(--font-display); color: var(--text-3); letter-spacing: 1px; }
+.s-sign { font-family: var(--font-ui); font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; }
+.s-planets { display: flex; flex-wrap: wrap; gap: 2px 6px; margin-top: 2px; font-family: var(--font-ui); font-size: 13px; color: var(--gold-light); }
+.s-planets i { font-style: normal; font-size: 8px; color: #ff8a80; vertical-align: super; }
+.s-cell.lagna::after { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-right: 1.5px solid var(--gold-light); transform: rotate(45deg); transform-origin: top left; }
+
+.positions td.num, .dasha td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.positions .lagna-row td { background: rgba(217, 180, 92, .08); }
+.retro { font-family: var(--font-ui); font-size: 10px; font-weight: 700; color: #ff8a80; }
+.muted { color: var(--text-3); font-size: 12px; }
+
+.panchang { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 20px; font-family: var(--font-ui); }
+.panchang dt { font-size: 10.5px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); }
+.panchang dd { font-size: 14.5px; font-weight: 600; color: var(--text); }
+
+.dasha-block { border: 1px solid var(--line-soft); border-radius: var(--radius-sm); margin-bottom: 8px; background: rgba(10, 6, 18, .25); }
+.dasha-block > summary { cursor: pointer; padding: 10px 14px; font-family: var(--font-ui); font-size: 14px; color: var(--text); list-style: none; }
+.dasha-block > summary::before { content: "▸"; display: inline-block; width: 16px; color: var(--gold); transition: transform .15s; }
+.dasha-block[open] > summary::before { transform: rotate(90deg); }
+.dasha-block > table { margin: 0 0 6px; }
+.dasha-sm { font-size: 12.5px; }
+.dasha-xs { font-size: 12px; margin: 0; }
+.prat-row > td { padding: 0 0 0 24px; border-bottom: 0; }
+.prat-row details > summary { cursor: pointer; font-family: var(--font-ui); font-size: 11.5px; color: var(--text-3); padding: 4px 0 4px 10px; list-style: none; }
+.prat-row details > summary::before { content: "▸ "; color: var(--gold); }
+.prat-row details[open] > summary::before { content: "▾ "; }
+@media (max-width: 720px) { .positions th:nth-child(6), .positions td:nth-child(6), .positions th:nth-child(8), .positions td:nth-child(8) { display: none; } }
+
+.loading { position: relative; z-index: 1; text-align: center; padding: 80px 20px; font-family: var(--font-display); font-size: 20px; color: var(--gold-light); }

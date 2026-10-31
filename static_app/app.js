@@ -13,6 +13,25 @@
     const builder = window.CosmicReport.createReportBuilder(DATA, engine);
     const nameBuilder = window.CosmicName.createNameBuilder(DATA, engine, builder.formatDateLong);
 
+    // Astrology needs the Swiss Ephemeris WebAssembly build; load it on first use.
+    DATA.ASTRO.PLACES = DATA.ASTRO.PLACES_RAW.map((p) => ({
+        name: p[0], region: p[1], country: p[2], latitude: p[3], longitude: p[4], timezone: p[5],
+        label: [p[0]].concat(p[1] ? [p[1]] : []).concat([p[2]]).join(', '),
+    }));
+    let astroPromise = null;
+    function loadAstro() {
+        if (!astroPromise) {
+            astroPromise = import('./vendor/swisseph/src/swisseph.js').then(async (mod) => {
+                const swe = new mod.default();
+                await swe.initSwissEph();
+                return window.CosmicAstro.createAstro(DATA, swe, builder);
+            });
+        }
+        return astroPromise;
+    }
+    const placeIndex = window.CosmicAstro.createAstro(DATA, null, builder);   // search needs no ephemeris
+    window.cosmicPlaceSearch = (q) => placeIndex.searchPlaces(q).map((p) => p.label);
+
     // ---- Templates -----------------------------------------------------------
     function TemplateLoader() {}
     TemplateLoader.prototype.getSource = function (name) {
@@ -21,7 +40,7 @@
         return { src, path: name, noCache: false };
     };
     const env = new nunjucks.Environment(new TemplateLoader(), { autoescape: true });
-    env.addGlobal('url_for', (endpoint) => ({ 'main.report': '#/report', 'main.name_report': '#/name-report' }[endpoint] || '#/'));
+    env.addGlobal('url_for', (endpoint) => ({ 'main.report': '#/report', 'main.name_report': '#/name-report', 'main.astro_report': '#/astro-report' }[endpoint] || '#/'));
     env.addGlobal('app_version', DATA.VERSION);
 
     const app = document.getElementById('app');
@@ -50,13 +69,21 @@
         app.innerHTML = env.render('home.html', { error: error || '', tab: tab || 'dasha' });
         window.scrollTo(0, 0);
 
-        const card = app.querySelector('.entry-card');
-        const tabs = card.querySelectorAll('.tab');
-        const panels = card.querySelectorAll('.tab-panel');
-        tabs.forEach((t) => t.addEventListener('click', () => {
-            tabs.forEach((x) => x.setAttribute('aria-selected', String(x === t)));
-            panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === t.dataset.tab));
-        }));
+        window.initHomePage();
+
+        app.querySelector('form[data-panel="astro"]').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const f = event.target;
+            const params = new URLSearchParams({
+                name: f.querySelector('#astro-name').value.trim(),
+                gender: f.querySelector('input[name="gender"]:checked').value,
+                day: f.querySelector('#astro-day').value, month: f.querySelector('#astro-month').value, year: f.querySelector('#astro-year').value,
+                hour: f.querySelector('#astro-hour').value, minute: f.querySelector('#astro-minute').value,
+                place: f.querySelector('#astro-place').value.trim(),
+                style: f.querySelector('input[name="style"]:checked').value,
+            });
+            location.hash = '#/astro-report?' + params.toString();
+        });
 
         app.querySelector('form[data-panel="name"]').addEventListener('submit', (event) => {
             event.preventDefault();
@@ -72,8 +99,6 @@
         const day = document.getElementById('day');
         const month = document.getElementById('month');
         const year = document.getElementById('year');
-        day.addEventListener('input', () => { if (day.value.length >= 2) month.focus(); });
-        month.addEventListener('input', () => { if (month.value.length >= 2) year.focus(); });
 
         app.querySelector('form[data-panel="dasha"]').addEventListener('submit', (event) => {
             event.preventDefault();
@@ -119,6 +144,44 @@
         initToolbar('Name_Report_' + r.name.replace(/\s+/g, '_') + '.html');
     }
 
+    async function showAstroReport(params) {
+        let birth, time, place;
+        try {
+            birth = parseBirthDate(Number(params.get('day')), Number(params.get('month')), Number(params.get('year')));
+            const hour = Number(params.get('hour')), minute = Number(params.get('minute'));
+            if (params.get('hour') === '' || params.get('minute') === '' || Number.isNaN(hour) || Number.isNaN(minute)) throw new Error('Please enter the time of birth (hours and minutes).');
+            if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Time of birth must be between 00:00 and 23:59.');
+            time = { hour, minute };
+            place = placeIndex.findPlace(params.get('place') || '');
+            if (!place) throw new Error('Please choose the place of birth from the list of suggestions.');
+        } catch (e) {
+            location.hash = '#/';
+            showHome(e.message, 'astro');
+            return;
+        }
+        document.body.className = 'report';
+        app.innerHTML = '<p class="loading">Calculating planetary positions…</p>';
+        let astro;
+        try {
+            astro = await loadAstro();
+        } catch (e) {
+            app.innerHTML = '<p class="loading">The astronomy library could not be loaded. Check the internet connection and try again.</p>';
+            return;
+        }
+        const nowMs = params.get('today') ? Date.parse(params.get('today')) : Date.now();
+        const r = astro.buildAstroReport(params.get('name') || '', params.get('gender') || '', birth.year, birth.month, birth.day,
+            time.hour, time.minute, place, params.get('style') || 'north', 'lahiri', nowMs);
+        if (params.get('format') === 'json') {
+            app.innerHTML = '<pre id="json"></pre>';
+            document.getElementById('json').textContent = JSON.stringify(r);
+            return;
+        }
+        document.title = 'Birth Chart · ' + (r.name || r.birth.date);
+        app.innerHTML = env.render('astro_report.html', { r });
+        window.scrollTo(0, 0);
+        initToolbar('Birth_Chart_' + (r.name || 'Client').replace(/\s+/g, '_') + '.html');
+    }
+
     // ---- Report toolbar (same behaviour as numerology/static/js/report.js) ----
     function initToolbar(filename) {
         const editToggle = document.getElementById('editToggle');
@@ -160,8 +223,10 @@
             showReport(new URLSearchParams(hash.split('?')[1] || ''));
         } else if (hash.startsWith('#/name-report')) {
             showNameReport(new URLSearchParams(hash.split('?')[1] || ''));
+        } else if (hash.startsWith('#/astro-report')) {
+            showAstroReport(new URLSearchParams(hash.split('?')[1] || ''));
         } else {
-            showHome('', hash === '#name' ? 'name' : 'dasha');
+            showHome('', hash === '#name' ? 'name' : hash === '#astro' ? 'astro' : 'dasha');
         }
     }
     window.addEventListener('hashchange', route);

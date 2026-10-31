@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Birth Chart · {{ r.name or r.birth.date }}{% endblock %}
+{% block body_class %}report{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}" media="print">
+{% endblock %}
+
+{% block content %}
+<nav class="toolbar no-print" aria-label="Report actions">
+    <a href="{{ url_for('main.home') }}#astro" class="tb-btn">← New chart</a>
+    <span class="tb-title">{{ r.name or 'Birth chart' }} · {{ r.birth.date }} {{ r.birth.time }}</span>
+    <div class="tb-actions">
+        <button type="button" class="tb-btn" id="editToggle" aria-pressed="true">Editing on</button>
+        <button type="button" class="tb-btn" id="saveHtml">Save HTML</button>
+        <button type="button" class="tb-btn tb-primary" id="printBtn">Print / Save PDF</button>
+    </div>
+</nav>
+
+<article class="doc doc-astro">
+
+    <header class="cover">
+        <p class="cover-brand">CosmicScript</p>
+        <h1 class="cover-title">Vedic Birth Chart</h1>
+        {% if r.name %}<p class="cover-for">prepared for <strong>{{ r.name }}</strong></p>{% endif %}
+        <dl class="cover-meta">
+            <div><dt>Born</dt><dd>{{ r.birth.date }}, {{ r.birth.weekday }}</dd></div>
+            <div><dt>Time</dt><dd>{{ r.birth.time }}</dd></div>
+            <div><dt>Place</dt><dd>{{ r.birth.place }}</dd></div>
+            <div><dt>Report date</dt><dd>{{ r.report_date }}</dd></div>
+        </dl>
+    </header>
+
+    {# ------------------------------------------------------------ At a glance #}
+    <section class="sec">
+        <h2 class="sec-title">At a glance</h2>
+        <div class="glance">
+            <div class="glance-card root">
+                <span class="glance-label">Lagna · Ascendant</span>
+                <span class="glance-num glance-word">{{ r.lagna.sign }}</span>
+                <span class="glance-planet">{{ r.lagna.degrees.text }} · lord {{ r.lagna.sign_lord }}</span>
+                <span class="glance-note">{{ r.lagna.nakshatra }}, pada {{ r.lagna.pada }}</span>
+            </div>
+            <div class="glance-card destiny">
+                <span class="glance-label">Moon sign · Rashi</span>
+                <span class="glance-num glance-word">{{ r.moon.sign }}</span>
+                <span class="glance-planet">{{ r.moon.degrees.text }} · lord {{ r.moon.sign_lord }}</span>
+                <span class="glance-note">Janma nakshatra {{ r.moon.nakshatra }}, pada {{ r.moon.pada }} · lord {{ r.moon.nakshatra_lord }}</span>
+            </div>
+            <div class="glance-card period">
+                <span class="glance-label">Sun sign</span>
+                <span class="glance-num glance-word">{{ r.sun.sign }}</span>
+                <span class="glance-planet">{{ r.sun.degrees.text }} · lord {{ r.sun.sign_lord }}</span>
+                <span class="glance-note">{{ r.sun.nakshatra }}, pada {{ r.sun.pada }}</span>
+            </div>
+            {% if r.now %}
+            <div class="glance-card period">
+                <span class="glance-label">Running dasha today</span>
+                <span class="glance-num glance-word">{{ r.now_text }}</span>
+                <span class="glance-planet">Maha › Antar › Pratyantar</span>
+                <span class="glance-note">Current sub-period {{ r.now_last.start }} to {{ r.now_last.end }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ------------------------------------------------------------ Charts #}
+    <section class="sec">
+        <h2 class="sec-title">Charts</h2>
+        <div class="charts">
+            {% set chart = r.rasi %}{% set title = 'Rasi (D1)' %}{% set style = r.chart_style %}{% include "_chart.html" %}
+            {% set chart = r.navamsa %}{% set title = 'Navamsa (D9)' %}{% set style = r.chart_style %}{% include "_chart.html" %}
+        </div>
+        <p class="note">
+            {% if r.chart_style == 'south' %}Signs stay in fixed positions; the Lagna sign is marked.{% else %}House 1 is the top diamond; the number in each house is its sign (1 = Aries … 12 = Pisces).{% endif %}
+            R marks a retrograde planet. Sidereal zodiac, {{ r.birth.ayanamsa_name|capitalize }} ayanamsa {{ r.birth.ayanamsa.text }}.
+        </p>
+    </section>
+
+    {# ------------------------------------------------------------ Positions #}
+    <section class="sec">
+        <h2 class="sec-title">Planetary positions</h2>
+        <table class="table positions">
+            <thead>
+                <tr><th>Planet</th><th>Sign</th><th>Degrees</th><th>Nakshatra</th><th>Pada</th><th>Nak. lord</th><th>House</th><th>Navamsa</th></tr>
+            </thead>
+            <tbody>
+                <tr class="lagna-row">
+                    <td><b>Lagna</b></td><td>{{ r.lagna.sign }} <span class="muted">({{ r.lagna.sign_lord }})</span></td><td class="num">{{ r.lagna.degrees.text }}</td>
+                    <td>{{ r.lagna.nakshatra }}</td><td class="num">{{ r.lagna.pada }}</td><td>{{ r.lagna.nakshatra_lord }}</td><td class="num">1</td><td>{{ r.lagna.navamsa_sign }}</td>
+                </tr>
+                {% for p in r.positions %}
+                <tr>
+                    <td><b>{{ p.symbol }} {{ p.key }}</b>{% if p.retrograde %} <span class="retro">R</span>{% endif %}</td>
+                    <td>{{ p.sign }} <span class="muted">({{ p.sign_lord }})</span></td>
+                    <td class="num">{{ p.degrees.text }}</td>
+                    <td>{{ p.nakshatra }}</td>
+                    <td class="num">{{ p.pada }}</td>
+                    <td>{{ p.nakshatra_lord }}</td>
+                    <td class="num">{{ p.house }}</td>
+                    <td>{{ p.navamsa_sign }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="note">Degrees are within the sign. House numbers count whole signs from the Lagna. Rahu is the mean node; Ketu is opposite.</p>
+    </section>
+
+    {# ------------------------------------------------------------ Panchang #}
+    <section class="sec">
+        <h2 class="sec-title">Panchang at birth</h2>
+        <dl class="panchang">
+            <div><dt>Tithi</dt><dd>{{ r.panchang.tithi }}</dd></div>
+            <div><dt>Vara</dt><dd>{{ r.panchang.vara }} <span class="muted">({{ r.panchang.vara_lord }})</span></dd></div>
+            <div><dt>Nakshatra</dt><dd>{{ r.moon.nakshatra }}, pada {{ r.moon.pada }}</dd></div>
+            <div><dt>Yoga</dt><dd>{{ r.panchang.yoga }}</dd></div>
+            <div><dt>Karana</dt><dd>{{ r.panchang.karana }}</dd></div>
+        </dl>
+        <p class="note">Vara is taken from the civil date; a birth before sunrise belongs to the previous vara.</p>
+    </section>
+
+    {# ------------------------------------------------------------ Dasha #}
+    <section class="sec page-break">
+        <h2 class="sec-title">Vimshottari Dasha</h2>
+        <p class="lead">
+            The Moon was in <strong>{{ r.dasha.nakshatra }}</strong> at birth, ruled by <strong>{{ r.dasha.nakshatra_lord }}</strong>, so life begins in the
+            {{ r.dasha.nakshatra_lord }} Mahadasha with a balance of <strong>{{ r.dasha.balance_text }}</strong>
+            ({{ (100 * (1 - r.dasha.fraction_elapsed))|round|int }}% of the nakshatra remained). The first period is shown from its notional start before birth.
+        </p>
+
+        {% if r.now %}
+        <div class="callout root">
+            <span class="num-badge">☽</span>
+            <div>
+                <strong>Running now:</strong>
+{{ r.now_text }}.
+                Mahadasha {{ r.now[0].start }} to {{ r.now[0].end }}{% if r.now|length > 1 %}; Antardasha {{ r.now[1].start }} to {{ r.now[1].end }}{% endif %}{% if r.now|length > 2 %}; Pratyantar {{ r.now[2].start }} to {{ r.now[2].end }}{% endif %}.
+            </div>
+        </div>
+        {% endif %}
+
+        <h3 class="sub-title">Mahadasha</h3>
+        <table class="table dasha">
+            <thead><tr><th>Planet</th><th>From</th><th>To</th><th>Years</th></tr></thead>
+            <tbody>
+                {% for m in r.dasha.mahadashas %}
+                <tr class="{{ 'is-current' if m.is_current else '' }} {{ 'is-past' if m.is_past else '' }}">
+                    <td><b>{{ m.lord }}</b>{% if m.is_current %} <span class="tag-now">now</span>{% endif %}</td><td>{{ m.start }}</td><td>{{ m.end }}</td><td class="num">{{ m.years }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3 class="sub-title">Antardasha and Pratyantar dasha</h3>
+        <p class="note">Open a Mahadasha to see its nine Antardashas; open an Antardasha to see its Pratyantar periods. The running periods are open by default.</p>
+        {% for m in r.dasha.mahadashas %}
+        <details class="dasha-block" {% if m.is_current %}open{% endif %}>
+            <summary><b>{{ m.lord }} Mahadasha</b> <span class="muted">{{ m.start }} – {{ m.end }}</span>{% if m.is_current %} <span class="tag-now">now</span>{% endif %}</summary>
+            <table class="table dasha dasha-sm">
+                <thead><tr><th>Antardasha</th><th>From</th><th>To</th><th>Days</th></tr></thead>
+                <tbody>
+                    {% for a in m.sub %}
+                    <tr class="{{ 'is-current' if a.is_current else '' }} {{ 'is-past' if a.is_past else '' }}">
+                        <td>{{ m.lord }} › <b>{{ a.lord }}</b>{% if a.is_current %} <span class="tag-now">now</span>{% endif %}</td><td>{{ a.start }}</td><td>{{ a.end }}</td><td class="num">{{ a.days }}</td>
+                    </tr>
+                    <tr class="prat-row">
+                        <td colspan="4">
+                            <details {% if a.is_current %}open{% endif %}>
+                                <summary>Pratyantar periods of {{ m.lord }} › {{ a.lord }}</summary>
+                                <table class="table dasha dasha-xs">
+                                    <tbody>
+                                        {% for pr in a.sub %}
+                                        <tr class="{{ 'is-current' if pr.is_current else '' }} {{ 'is-past' if pr.is_past else '' }}">
+                                            <td>{{ m.lord }} › {{ a.lord }} › <b>{{ pr.lord }}</b>{% if pr.is_current %} <span class="tag-now">now</span>{% endif %}</td><td>{{ pr.start }}</td><td>{{ pr.end }}</td><td class="num">{{ pr.days }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </details>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </details>
+        {% endfor %}
+    </section>
+
+    {# ------------------------------------------------------------ Birth data #}
+    <section class="sec">
+        <h2 class="sec-title">Birth data used</h2>
+        <dl class="panchang">
+            <div><dt>Local time</dt><dd>{{ r.birth.date }} {{ r.birth.time }} ({{ r.birth.timezone }}, UTC{{ '+' if r.birth.utc_offset >= 0 else '' }}{{ r.birth.utc_offset }})</dd></div>
+            <div><dt>Universal time</dt><dd>{{ r.birth.utc }}</dd></div>
+            <div><dt>Coordinates</dt><dd>{{ r.birth.latitude }}°, {{ r.birth.longitude }}°</dd></div>
+            <div><dt>Julian day</dt><dd>{{ r.birth.jd }}</dd></div>
+            <div><dt>Ayanamsa</dt><dd>{{ r.birth.ayanamsa_name|capitalize }} {{ r.birth.ayanamsa.text }}</dd></div>
+            {% if r.gender %}<div><dt>Gender</dt><dd>{{ r.gender|capitalize }}</dd></div>{% endif %}
+        </dl>
+    </section>
+
+    <section class="sec">
+        <h2 class="sec-title">Astrologer's notes <span class="edit-hint no-print">click to edit</span></h2>
+        <div class="editable tall">Observations on the Lagna, Moon, planetary strengths, yogas and the running dasha, with guidance for the client.</div>
+    </section>
+
+    <footer class="doc-footer">
+        <p>Positions from the Swiss Ephemeris, sidereal zodiac with the {{ r.birth.ayanamsa_name|capitalize }} ayanamsa. Offered for guidance only.</p>
+        <p class="footer-brand">© {{ r.report_year }} CosmicScript · <a href="https://cosmicscript.in">cosmicscript.in</a>{% if app_version %} · v{{ app_version }}{% endif %}</p>
+    </footer>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/report.js') }}" data-filename="Birth_Chart_{{ (r.name or 'Client')|replace(' ', '_') }}.html"></script>
+{% endblock %}

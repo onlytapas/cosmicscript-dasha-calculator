@@ -1,0 +1,41 @@
+{# Vedic chart. `chart` has houses[] (house, sign, sign_number, planets[]) and south[][]; `title` names it. #}
+{% if style == 'south' %}
+<div class="chart chart-south">
+    <table class="south-grid" aria-label="{{ title }}">
+        {% for row in chart.south %}
+        <tr>
+            {% for cell in row %}
+            {% if cell and cell.center %}
+            <td class="s-center" colspan="2" rowspan="2"><span>{{ title }}</span></td>
+            {% elif cell %}
+            <td class="s-cell {{ 'lagna' if cell.is_lagna else '' }}">
+                <span class="s-sign">{{ cell.sign_abbr }}</span>
+                <span class="s-planets">{% for p in cell.planets %}<b>{{ p.abbr }}{% if p.retrograde %}<i>R</i>{% endif %}</b>{% endfor %}</span>
+            </td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% else %}
+{% set pos = [
+    [200, 100, 200, 160], [100, 36, 100, 72], [36, 100, 72, 100], [100, 200, 160, 200],
+    [36, 300, 72, 300], [100, 364, 100, 328], [200, 300, 200, 240], [300, 364, 300, 328],
+    [364, 300, 328, 300], [300, 200, 240, 200], [364, 100, 328, 100], [300, 36, 300, 72]
+] %}
+<div class="chart chart-north">
+    <svg viewBox="0 0 400 400" role="img" aria-label="{{ title }}">
+        <rect x="1" y="1" width="398" height="398" class="n-frame"/>
+        <path d="M1 1 L399 399 M399 1 L1 399 M200 1 L399 200 L200 399 L1 200 Z" class="n-lines"/>
+        {% for h in chart.houses %}
+        {% set c = pos[loop.index0] %}
+        <text x="{{ c[2] }}" y="{{ c[3] }}" class="n-sign">{{ h.sign_number }}</text>
+        <text x="{{ c[0] }}" y="{{ c[1] }}" class="n-planets {{ 'n-stack' if loop.index0 in [2, 4, 8, 10] else '' }}">
+            {% for p in h.planets %}<tspan {% if loop.index0 in [2, 4, 8, 10] %}x="{{ c[0] }}" dy="{{ '0' if loop.first else '15' }}"{% else %}dx="{{ '0' if loop.first else '6' }}"{% endif %}>{{ p.abbr }}{% if p.retrograde %}<tspan class="n-retro">R</tspan>{% endif %}</tspan>{% endfor %}
+        </text>
+        {% endfor %}
+        <text x="200" y="22" class="n-title">{{ title }}</text>
+    </svg>
+</div>
+{% endif %}

@@ -45,3 +45,17 @@ def parse_name(name: Optional[str]) -> str:
     if not any(ch.isascii() and ch.isalpha() for ch in cleaned):
         raise ValueError("The name must contain at least one letter from A to Z.")
     return cleaned
+
+
+@dataclass(frozen=True)
+class BirthTime:
+    hour: int
+    minute: int
+
+
+def parse_birth_time(hour: Optional[int], minute: Optional[int]) -> BirthTime:
+    if hour is None or minute is None:
+        raise ValueError("Please enter the time of birth (hours and minutes).")
+    if not 0 <= hour <= 23 or not 0 <= minute <= 59:
+        raise ValueError("Time of birth must be between 00:00 and 23:59.")
+    return BirthTime(hour, minute)

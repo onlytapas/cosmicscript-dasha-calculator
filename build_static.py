@@ -13,10 +13,13 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import shutil
 from datetime import date
 from pathlib import Path
 
 from numerology import constants, interpretations, name_engine, name_interpretations
+from numerology.astro import constants as astro_constants
+from numerology.astro.places import PLACES_FILE
 
 ROOT = Path(__file__).resolve().parent
 PKG = ROOT / "numerology"
@@ -63,11 +66,31 @@ def build_data(version: str = "") -> dict:
             "COMPOUND_MEANINGS": name_interpretations.COMPOUND_MEANINGS,
             "NAME_NUMBER_MEANINGS": name_interpretations.NAME_NUMBER_MEANINGS,
         },
+        "ASTRO": {
+            "SIGNS": [dataclasses.asdict(x) for x in astro_constants.SIGNS],
+            "NAKSHATRAS": astro_constants.NAKSHATRAS,
+            "DASHA_LORDS": astro_constants.DASHA_LORDS,
+            "DASHA_YEARS": astro_constants.DASHA_YEARS,
+            "DASHA_TOTAL_YEARS": astro_constants.DASHA_TOTAL_YEARS,
+            "DASHA_YEAR_DAYS": astro_constants.DASHA_YEAR_DAYS,
+            "NAKSHATRA_SPAN": astro_constants.NAKSHATRA_SPAN,
+            "NAVAMSA_SPAN": astro_constants.NAVAMSA_SPAN,
+            "PLANETS": astro_constants.PLANETS,
+            "WEEKDAY_LORDS": astro_constants.WEEKDAY_LORDS,
+            "WEEKDAY_NAMES": astro_constants.WEEKDAY_NAMES,
+            "TITHI_NAMES": astro_constants.TITHI_NAMES,
+            "YOGA_NAMES": astro_constants.YOGA_NAMES,
+            "KARANA_CYCLE": astro_constants.KARANA_CYCLE,
+            "KARANA_FIXED": astro_constants.KARANA_FIXED,
+            "PLACES_RAW": json.loads(PLACES_FILE.read_text()),
+        },
         "TEMPLATES": {
             "base.html": STATIC_BASE,
             "home.html": (PKG / "templates" / "home.html").read_text(),
             "report.html": (PKG / "templates" / "report.html").read_text(),
             "name_report.html": (PKG / "templates" / "name_report.html").read_text(),
+            "astro_report.html": (PKG / "templates" / "astro_report.html").read_text(),
+            "_chart.html": (PKG / "templates" / "_chart.html").read_text(),
             "_grid.html": (PKG / "templates" / "_grid.html").read_text(),
             "_steps.html": (PKG / "templates" / "_steps.html").read_text(),
         },
@@ -89,6 +112,8 @@ def build(version: str | None = None) -> Path:
         "engine": (SRC / "engine.js").read_text(),
         "report": (SRC / "report.js").read_text(),
         "name": (SRC / "name_engine.js").read_text(),
+        "astro": (SRC / "astro.js").read_text(),
+        "home": (PKG / "static" / "js" / "home.js").read_text(),
         "app": (SRC / "app.js").read_text(),
     }
     if version is None:
@@ -123,6 +148,8 @@ def build(version: str | None = None) -> Path:
     <script>{parts['engine']}</script>
     <script>{parts['report']}</script>
     <script>{parts['name']}</script>
+    <script>{parts['astro']}</script>
+    <script>{parts['home']}</script>
     <script>{parts['app']}</script>
 </body>
 </html>
@@ -130,6 +157,10 @@ def build(version: str | None = None) -> Path:
     DIST.mkdir(exist_ok=True)
     out = DIST / "index.html"
     out.write_text(html)
+    vendor = DIST / "vendor" / "swisseph"
+    if vendor.exists():
+        shutil.rmtree(vendor)
+    shutil.copytree(SRC / "vendor" / "swisseph", vendor)
     return out
 
 
