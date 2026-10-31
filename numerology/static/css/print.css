@@ -1,0 +1,33 @@
+/* Print: the screen theme is dark, so remap the tokens to a light palette and hide the chrome. */
+@page { size: A4; margin: 14mm 12mm; }
+
+:root {
+    --bg: #fff; --bg-2: #fff; --surface: #fff; --surface-2: #fff; --surface-3: #fff;
+    --gold: #a9802c; --gold-light: #8a6420; --gold-dark: #8a6420; --gold-glow: rgba(169, 128, 44, .15);
+    --violet: #5f4b9e; --violet-soft: rgba(95, 75, 158, .1);
+    --text: #1d1726; --text-2: #3f3749; --text-3: #7a7284;
+    --line: #d9cfb3; --line-soft: #e6e1ea;
+}
+body.report { background: #fff; }
+.cosmos, .toolbar, .no-print, .edit-hint { display: none !important; }
+.doc { max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: #fff; font-size: 12.5px; }
+.cover-title { -webkit-text-fill-color: #1d1726; background: none; }
+.glance-card, .howto, .year-card, .callout, .chip, .ytag, .weekday-legend li, .lo-shu .cell { background: #fff; }
+.lo-shu .cell { border-color: #b9ad8c; }
+.lo-shu .cell.filled { background: #f6ecd2; }
+.lo-shu .cell.strong { background: #eedbA6; }
+.lo-shu .cell.empty .cell-val { color: #d8d2c4; }
+.cell-val { color: #1d1726; }
+.table tr.is-current td, .prat-list li.active, .year-head, .callout, .table thead th { background: #f6ecd2; }
+.tl-seg, .prat-seg, .num-badge, .pill, .tag-now, .chip-result { color: #140c22; }
+.tl-seg.current { outline-color: #1d1726; }
+.prat-seg.active { outline-color: #1d1726; }
+.editable { border-color: transparent; background: transparent; padding-left: 0; padding-right: 0; }
+.editable:empty { display: none; }
+
+.page-break { break-before: page; page-break-before: always; }
+.year-card, .howto, .glance-card, .callout, tr { break-inside: avoid; page-break-inside: avoid; }
+.sec-title { break-after: avoid; page-break-after: avoid; }
+.year-card.current { box-shadow: none; }
+.sec { margin-bottom: 28px; }
+.year-card { margin-bottom: 10px; }

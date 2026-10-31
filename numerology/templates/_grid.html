@@ -1,0 +1,13 @@
+{# Lo Shu grid. `cells` is a 3x3 list of {position, planet, value, count}. #}
+<table class="lo-shu {{ size or '' }}" aria-label="Numerology grid">
+    {% for row in cells %}
+    <tr>
+        {% for c in row %}
+        <td class="cell {{ 'filled' if c.value else 'empty' }}{{ ' strong' if c.count > 1 else '' }}">
+            <span class="cell-pos">{{ c.position }} <span class="cell-planet">{{ c.planet.symbol }}</span></span>
+            <span class="cell-val">{{ c.value or '·' }}</span>
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>

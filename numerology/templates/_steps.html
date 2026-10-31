@@ -1,0 +1,10 @@
+{# A chain of digit-sum reductions: value → a + b = n → … → result #}
+<span class="chain">
+    <span class="chip chip-start">{{ start }}</span>
+    {% for s in steps %}
+    <span class="chain-arrow">→</span>
+    <span class="chip">{{ s.expression }} = <b>{{ s.result }}</b></span>
+    {% endfor %}
+    <span class="chain-arrow">→</span>
+    <span class="chip chip-result {{ accent or '' }}">{{ result }}</span>
+</span>

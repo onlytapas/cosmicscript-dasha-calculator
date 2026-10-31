@@ -1,0 +1,221 @@
+/* ==========================================================================
+   CosmicScript — report document, deep purple & gold
+   ========================================================================== */
+body.report { background: var(--bg); color: var(--text); }
+
+.doc {
+    position: relative; z-index: 1;
+    max-width: 880px; margin: 26px auto 70px; padding: 54px 58px;
+    background: linear-gradient(180deg, rgba(35, 22, 64, .92), rgba(26, 16, 48, .96));
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255,255,255,.04);
+    font-family: var(--font-body); font-size: 14.5px; line-height: 1.75; color: var(--text-2);
+}
+.doc strong, .doc b { color: var(--text); }
+.doc em { font-style: italic; color: var(--gold-light); }
+
+/* ---------- Typography ---------- */
+.sec { margin-bottom: 46px; }
+.sec-title {
+    font-family: var(--font-display); font-size: 23px; font-weight: 600; color: var(--gold-light);
+    padding-bottom: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--line);
+    position: relative;
+}
+.sec-title::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 72px; height: 2px; background: var(--gold); }
+.sub-title { font-family: var(--font-ui); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin: 22px 0 8px; }
+.lead { margin-bottom: 18px; font-size: 15px; }
+.edit-hint { font-family: var(--font-ui); font-size: 10px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-3); margin-left: 6px; }
+
+/* ---------- Cover ---------- */
+.cover { text-align: center; padding-bottom: 30px; margin-bottom: 38px; border-bottom: 1px solid var(--line); }
+.cover-brand { font-family: var(--font-display); font-size: 13px; letter-spacing: 6px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.cover-brand::before, .cover-brand::after { content: "✦"; margin: 0 10px; font-size: 9px; vertical-align: 2px; }
+.cover-title {
+    font-family: var(--font-display); font-size: 36px; font-weight: 700; line-height: 1.2;
+    background: linear-gradient(135deg, var(--gold-light), #fff3d0 50%, var(--gold));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.cover-for { font-size: 17px; margin-top: 10px; font-style: italic; color: var(--text-2); }
+.cover-for strong { font-style: normal; font-family: var(--font-display); font-size: 21px; color: var(--text); }
+.cover-meta { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 38px; margin-top: 24px; font-family: var(--font-ui); }
+.cover-meta dt { font-size: 10px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-3); }
+.cover-meta dd { font-size: 15px; font-weight: 600; color: var(--gold-light); }
+
+/* ---------- Badges, pills, chips ---------- */
+.num-badge {
+    display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px;
+    font-family: var(--font-ui); font-weight: 700; font-size: 16px; color: #140c22; background: var(--gold); flex-shrink: 0;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.num-badge.sm { width: 24px; height: 24px; font-size: 12px; border-radius: 6px; }
+.num-badge.root { background: var(--gold); }
+.num-badge.destiny { background: var(--violet); }
+.pill {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 6px; margin: 2px;
+    border-radius: 6px; background: var(--c, var(--gold)); color: #140c22; font-family: var(--font-ui); font-weight: 700; font-size: 12px;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.pill-off { background: transparent; color: var(--text-3); border: 1px dashed var(--line-soft); }
+.tag-now {
+    display: inline-block; vertical-align: middle; margin-left: 4px; padding: 1px 8px; border-radius: 10px;
+    font-family: var(--font-ui); font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+    color: #140c22; background: var(--gold); print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+
+.chain { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; font-family: var(--font-ui); font-size: 13.5px; }
+.chip { padding: 5px 10px; border-radius: var(--radius-sm); background: rgba(10, 6, 18, .45); border: 1px solid var(--line-soft); color: var(--text-2); white-space: nowrap; }
+.chip b { color: var(--text); }
+.chip-start { font-weight: 600; color: var(--text); }
+.chip-result { font-weight: 700; font-size: 16px; color: #140c22; background: var(--text-2); border-color: transparent; min-width: 36px; text-align: center; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.chip-result.root { background: var(--gold); }
+.chip-result.destiny { background: var(--violet); }
+.chain-arrow { color: var(--gold-dark); }
+
+/* ---------- Cards (shared surface) ---------- */
+.card { background: rgba(10, 6, 18, .35); border: 1px solid var(--line-soft); border-radius: var(--radius); }
+
+/* ---------- At a glance ---------- */
+.glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.glance-card {
+    display: flex; flex-direction: column; gap: 2px; padding: 16px 16px 14px; border-radius: var(--radius);
+    background: rgba(10, 6, 18, .35); border: 1px solid var(--line-soft); border-top: 3px solid var(--gold); font-family: var(--font-ui);
+}
+.glance-card.destiny { border-top-color: var(--violet); }
+.glance-card.period { border-top-color: var(--text-3); }
+.glance-label { font-size: 10.5px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); }
+.glance-num { font-family: var(--font-display); font-size: 46px; font-weight: 700; line-height: 1.1; color: var(--gold-light); }
+.glance-card.destiny .glance-num { color: var(--violet); }
+.glance-planet { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.glance-note { font-size: 12px; color: var(--text-3); line-height: 1.45; margin-top: 4px; }
+
+/* ---------- How it is calculated ---------- */
+.howto { padding: 18px 20px; border: 1px solid var(--line-soft); border-radius: var(--radius); background: rgba(10, 6, 18, .3); margin-bottom: 14px; }
+.howto-title { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.howto p { margin-bottom: 12px; }
+.howto-chain { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; padding: 9px 0; border-top: 1px dashed var(--line-soft); }
+.howto-chain.total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; }
+.chain-lbl { font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); min-width: 92px; }
+
+/* ---------- Number profiles ---------- */
+.profile { border-left: 3px solid var(--gold); padding-left: 22px; }
+.profile.destiny { border-left-color: var(--violet); }
+.profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.profile-symbol { font-size: 46px; line-height: 1; color: var(--gold-light); }
+.profile.destiny .profile-symbol { color: var(--violet); }
+.profile-kicker { font-family: var(--font-ui); font-size: 10.5px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); }
+.profile-planet { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--text); line-height: 1.25; }
+.profile-keys { font-family: var(--font-ui); font-size: 12.5px; color: var(--text-3); }
+.profile-block { margin-bottom: 16px; }
+.profile-block h4 { font-family: var(--font-ui); font-size: 11.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+.profile.destiny .profile-block h4 { color: var(--violet); }
+
+/* ---------- Tables ---------- */
+.table { width: 100%; border-collapse: collapse; font-family: var(--font-ui); font-size: 13px; margin-top: 8px; }
+.table th, .table td { padding: 8px 10px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line-soft); }
+.table thead th { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid var(--line); background: rgba(217, 180, 92, .06); }
+.table thead th.destiny { color: var(--violet); }
+.table tbody th { font-weight: 600; color: var(--text); width: 40%; }
+.table td { color: var(--text-2); }
+.table tr.is-current td { background: rgba(217, 180, 92, .12); color: var(--text); font-weight: 600; }
+.table tr.is-past td { color: var(--text-3); }
+.table td.working { font-variant-numeric: tabular-nums; }
+.fav-table td { font-size: 14px; }
+
+/* ---------- Lo Shu grid ---------- */
+.lo-shu { border-collapse: collapse; }
+.lo-shu .cell { position: relative; width: 92px; height: 92px; border: 1px solid var(--line); text-align: center; vertical-align: middle; background: rgba(10, 6, 18, .4); }
+.lo-shu .cell.filled { background: rgba(217, 180, 92, .14); }
+.lo-shu .cell.strong { background: rgba(217, 180, 92, .28); }
+.lo-shu .cell.empty .cell-val { color: rgba(255, 255, 255, .12); }
+.cell-pos { position: absolute; top: 5px; left: 7px; font-family: var(--font-ui); font-size: 10px; font-weight: 600; color: var(--text-3); }
+.cell-planet { opacity: .8; }
+.cell-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--gold-light); letter-spacing: 2px; }
+.lo-shu.small .cell { width: 64px; height: 64px; }
+.lo-shu.small .cell-val { font-size: 20px; }
+
+.grid-layout { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+.grid-main { display: flex; flex-direction: column; gap: 14px; }
+.grid-summary { list-style: none; font-family: var(--font-ui); font-size: 12.5px; }
+.grid-summary li { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.grid-summary li > span { min-width: 120px; font-weight: 600; color: var(--text-3); font-size: 11px; letter-spacing: .8px; text-transform: uppercase; }
+.grid-summary i { color: var(--text-3); }
+.grid-sources { flex: 1; min-width: 260px; font-family: var(--font-ui); }
+.grid-sources h4 { font-size: 11.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.grid-sources ul { list-style: none; }
+.grid-sources li { display: grid; grid-template-columns: 64px 90px 1fr; align-items: center; gap: 6px 10px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+.src-label { font-weight: 600; color: var(--text-3); font-size: 11px; letter-spacing: .8px; text-transform: uppercase; }
+.src-value { font-weight: 600; color: var(--text); }
+.src-digits i { color: var(--text-3); }
+.src-note { grid-column: 2 / -1; font-size: 11.5px; color: var(--text-3); }
+
+/* ---------- Editable blocks ---------- */
+.editable {
+    padding: 12px 14px; border: 1px dashed rgba(217, 180, 92, .35); border-radius: var(--radius-sm); background: rgba(217, 180, 92, .04);
+    min-height: 48px; outline: none; font-size: 14px; color: var(--text-2); transition: border-color .15s, box-shadow .15s;
+}
+.editable.tall { min-height: 110px; }
+.editable p { margin-bottom: 6px; }
+.editable:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+body.editing-off .editable { border-color: transparent; background: transparent; padding-left: 0; padding-right: 0; }
+body.editing-off .edit-hint { display: none; }
+
+/* ---------- Callout ---------- */
+.callout { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; margin: 16px 0; border-radius: var(--radius); background: rgba(217, 180, 92, .09); border: 1px solid var(--line); }
+
+/* ---------- Maha Dasha timeline ---------- */
+.tl-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.tl-row-label { width: 84px; flex-shrink: 0; font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: .5px; color: var(--text-3); text-align: right; }
+.timeline { display: flex; flex: 1; height: 44px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line-soft); }
+.tl-seg {
+    position: relative; display: flex; align-items: center; justify-content: center; min-width: 0;
+    background: var(--c); color: #140c22; font-family: var(--font-ui); font-weight: 700; font-size: 13px; opacity: .92;
+    border-right: 1px solid rgba(10, 6, 18, .5); print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.tl-seg.past { opacity: .4; }
+.tl-seg.current { opacity: 1; outline: 3px solid var(--gold-light); outline-offset: -3px; z-index: 1; }
+.tl-age { position: absolute; bottom: 2px; left: 4px; font-size: 9px; font-weight: 600; opacity: .85; }
+.timeline-caption { font-family: var(--font-ui); font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+
+/* ---------- Antardasha ---------- */
+.weekday-legend { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; font-family: var(--font-ui); font-size: 12px; margin-bottom: 12px; }
+.weekday-legend li { padding: 3px 10px; border-radius: 14px; background: rgba(10, 6, 18, .4); border: 1px solid var(--line-soft); color: var(--text-2); }
+.weekday-legend b { color: var(--gold-light); }
+.antar-table td:nth-child(4) { font-size: 12px; }
+
+/* ---------- Year cards ---------- */
+.year-card { border: 1px solid var(--line-soft); border-radius: var(--radius); background: rgba(10, 6, 18, .3); margin-bottom: 16px; overflow: hidden; }
+.year-card.current { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+.year-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px 18px; background: rgba(217, 180, 92, .08); border-bottom: 1px solid var(--line-soft); }
+.year-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--gold-light); }
+.year-tags { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--font-ui); font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.ytag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 16px; background: rgba(10, 6, 18, .45); border: 1px solid var(--line-soft); }
+.year-body { display: flex; gap: 24px; flex-wrap: wrap; padding: 18px; }
+.year-prats { flex: 1; min-width: 280px; font-family: var(--font-ui); }
+.year-prats h4, .year-notes h4 { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+.prat-bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line-soft); margin-bottom: 10px; }
+.prat-seg { display: flex; align-items: center; justify-content: center; background: var(--c); color: #140c22; font-weight: 700; font-size: 11px; opacity: .88; border-right: 1px solid rgba(10, 6, 18, .5); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.prat-seg.active { opacity: 1; outline: 2px solid var(--gold-light); outline-offset: -2px; }
+.prat-list { list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+.prat-list li { display: grid; grid-template-columns: 24px 64px 1fr auto auto; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 4px; }
+.prat-list li.active { background: rgba(217, 180, 92, .12); font-weight: 600; }
+.prat-planet { color: var(--text); }
+.prat-dates { color: var(--text-2); white-space: nowrap; }
+.prat-days { color: var(--text-3); font-size: 11px; white-space: nowrap; }
+.year-notes { padding: 0 18px 18px; }
+
+/* ---------- Footer ---------- */
+.doc-footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); text-align: center; font-family: var(--font-ui); font-size: 11px; color: var(--text-3); }
+.footer-brand { margin-top: 6px; font-weight: 600; letter-spacing: 1px; color: var(--gold); }
+.footer-brand a { color: inherit; text-decoration: none; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+    .doc { margin: 12px; padding: 28px 18px; }
+    .cover-title { font-size: 26px; }
+    .lo-shu .cell { width: 76px; height: 76px; }
+    .grid-sources li { grid-template-columns: 56px 1fr; }
+    .src-digits { grid-column: 2; }
+    .table { font-size: 12px; }
+    .table th, .table td { padding: 6px 6px; }
+    .antar-table th:nth-child(2), .antar-table td:nth-child(2) { display: none; }
+}
