@@ -62,7 +62,7 @@ def client():
 
 def test_home_page_renders(client):
     html = client.get("/").get_data(as_text=True)
-    assert "Generate a report" in html
+    assert "Dasha report from a date of birth" in html and "Chaldean name numerology" in html
 
 
 def test_report_page_renders(client):

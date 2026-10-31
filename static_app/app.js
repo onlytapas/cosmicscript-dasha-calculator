@@ -11,6 +11,7 @@
     const DATA = window.COSMIC_DATA;
     const engine = window.CosmicEngine.createEngine(DATA);
     const builder = window.CosmicReport.createReportBuilder(DATA, engine);
+    const nameBuilder = window.CosmicName.createNameBuilder(DATA, engine, builder.formatDateLong);
 
     // ---- Templates -----------------------------------------------------------
     function TemplateLoader() {}
@@ -20,7 +21,7 @@
         return { src, path: name, noCache: false };
     };
     const env = new nunjucks.Environment(new TemplateLoader(), { autoescape: true });
-    env.addGlobal('url_for', (endpoint) => (endpoint === 'main.report' ? '#/report' : '#/'));
+    env.addGlobal('url_for', (endpoint) => ({ 'main.report': '#/report', 'main.name_report': '#/name-report' }[endpoint] || '#/'));
     env.addGlobal('app_version', DATA.VERSION);
 
     const app = document.getElementById('app');
@@ -34,12 +35,39 @@
         return { day, month, year };
     }
 
+    function parseName(name) {
+        const cleaned = (name || '').split(/\s+/).filter(Boolean).join(' ');
+        if (!cleaned) throw new Error('Please enter a name to analyse.');
+        if (cleaned.length > 80) throw new Error('The name must be 80 characters or fewer.');
+        if (!/[A-Za-z]/.test(cleaned)) throw new Error('The name must contain at least one letter from A to Z.');
+        return cleaned;
+    }
+
     // ---- Views ---------------------------------------------------------------
-    function showHome(error) {
+    function showHome(error, tab) {
         document.body.className = 'landing';
-        document.title = 'CosmicScript · Generate a Dasha Report';
-        app.innerHTML = env.render('home.html', { error: error || '' });
+        document.title = 'CosmicScript · Numerology Calculators';
+        app.innerHTML = env.render('home.html', { error: error || '', tab: tab || 'dasha' });
         window.scrollTo(0, 0);
+
+        const card = app.querySelector('.entry-card');
+        const tabs = card.querySelectorAll('.tab');
+        const panels = card.querySelectorAll('.tab-panel');
+        tabs.forEach((t) => t.addEventListener('click', () => {
+            tabs.forEach((x) => x.setAttribute('aria-selected', String(x === t)));
+            panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === t.dataset.tab));
+        }));
+
+        app.querySelector('form[data-panel="name"]').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const params = new URLSearchParams({
+                name: form.querySelector('#analyse-name').value.trim(),
+                owner: form.querySelector('input[name="owner"]:checked').value,
+                client: form.querySelector('#client').value.trim(),
+            });
+            location.hash = '#/name-report?' + params.toString();
+        });
 
         const day = document.getElementById('day');
         const month = document.getElementById('month');
@@ -47,7 +75,7 @@
         day.addEventListener('input', () => { if (day.value.length >= 2) month.focus(); });
         month.addEventListener('input', () => { if (month.value.length >= 2) year.focus(); });
 
-        app.querySelector('form').addEventListener('submit', (event) => {
+        app.querySelector('form[data-panel="dasha"]').addEventListener('submit', (event) => {
             event.preventDefault();
             const params = new URLSearchParams({
                 day: day.value, month: month.value, year: year.value,
@@ -72,6 +100,23 @@
         app.innerHTML = env.render('report.html', { r });
         window.scrollTo(0, 0);
         initToolbar('Report_' + (r.client_name || 'Client').replace(/\s+/g, '_') + '_' + r.dob_short.replace(/\s+/g, '-') + '.html');
+    }
+
+    function showNameReport(params) {
+        let name;
+        try {
+            name = parseName(params.get('name'));
+        } catch (e) {
+            location.hash = '#/';
+            showHome(e.message, 'name');
+            return;
+        }
+        const r = nameBuilder.buildNameReport(name, params.get('owner') || 'person', params.get('client') || '');
+        document.body.className = 'report';
+        document.title = 'Name Numerology · ' + r.name;
+        app.innerHTML = env.render('name_report.html', { r });
+        window.scrollTo(0, 0);
+        initToolbar('Name_Report_' + r.name.replace(/\s+/g, '_') + '.html');
     }
 
     // ---- Report toolbar (same behaviour as numerology/static/js/report.js) ----
@@ -113,8 +158,10 @@
         const hash = location.hash || '#/';
         if (hash.startsWith('#/report')) {
             showReport(new URLSearchParams(hash.split('?')[1] || ''));
+        } else if (hash.startsWith('#/name-report')) {
+            showNameReport(new URLSearchParams(hash.split('?')[1] || ''));
         } else {
-            showHome('');
+            showHome('', hash === '#name' ? 'name' : 'dasha');
         }
     }
     window.addEventListener('hashchange', route);

@@ -31,3 +31,5 @@ body.report { background: #fff; }
 .year-card.current { box-shadow: none; }
 .sec { margin-bottom: 28px; }
 .year-card { margin-bottom: 10px; }
+.letter-chip, .working { background: #fff; }
+.chaldean .used { background: #a9802c; color: #fff; }

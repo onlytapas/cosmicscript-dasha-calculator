@@ -219,3 +219,36 @@ body.editing-off .edit-hint { display: none; }
     .table th, .table td { padding: 6px 6px; }
     .antar-table th:nth-child(2), .antar-table td:nth-child(2) { display: none; }
 }
+
+/* ---------- Name numerology report ---------- */
+.glance-card.grade { border-top-color: var(--text-3); }
+.grade-word { font-size: 34px; }
+.grade-excellent .grade-word, .glance-card.grade-excellent { color: var(--gold-light); border-top-color: var(--gold); }
+.grade-very_good .grade-word, .glance-card.grade-very_good { color: #7ddc9a; border-top-color: #4ccb7a; }
+.grade-good .grade-word, .glance-card.grade-good { color: #7ddc9a; border-top-color: #4ccb7a; }
+.grade-acceptable .grade-word, .glance-card.grade-acceptable { color: #9fb4d8; border-top-color: #5ba3e0; }
+.grade-caution .grade-word, .glance-card.grade-caution { color: #f3b65a; border-top-color: #f39c3b; }
+.grade-avoid .grade-word, .glance-card.grade-avoid { color: #ff8a80; border-top-color: #f05a4f; }
+.callout.grade-avoid { border-color: rgba(240, 90, 79, .45); background: rgba(240, 90, 79, .08); }
+.callout.grade-avoid .num-badge { background: #f05a4f; }
+.callout.grade-caution { border-color: rgba(243, 156, 59, .45); background: rgba(243, 156, 59, .08); }
+.callout.grade-caution .num-badge { background: #f39c3b; }
+.callout.grade-good .num-badge, .callout.grade-very_good .num-badge { background: #4ccb7a; }
+.callout.grade-acceptable .num-badge { background: #5ba3e0; }
+.verdict-text { margin-top: 18px; font-size: 15.5px; }
+.note { font-family: var(--font-ui); font-size: 12px; color: var(--text-3); margin-top: 8px; }
+
+.working { padding: 18px 20px; border: 1px solid var(--line-soft); border-radius: var(--radius); background: rgba(10, 6, 18, .3); }
+.word { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; padding: 10px 0; border-bottom: 1px dashed var(--line-soft); }
+.word-letters { display: flex; flex-wrap: wrap; gap: 6px; }
+.letter-chip { display: inline-flex; flex-direction: column; align-items: center; min-width: 34px; padding: 5px 6px 4px; border-radius: 7px; background: rgba(10, 6, 18, .5); border: 1px solid var(--line-soft); }
+.letter { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.1; }
+.letter-val { font-family: var(--font-ui); font-size: 11px; font-weight: 700; color: var(--gold-light); }
+.word-sum { font-family: var(--font-ui); font-size: 13px; color: var(--text-2); white-space: nowrap; }
+.word-sum b { color: var(--gold-light); font-size: 15px; }
+.working .howto-chain.total { border-top: 0; padding-top: 14px; }
+
+.chaldean { border-collapse: collapse; font-family: var(--font-ui); margin-top: 8px; }
+.chaldean th { width: 44px; padding: 6px 0; font-size: 12px; font-weight: 700; color: var(--gold); border-bottom: 1px solid var(--line); text-align: center; background: rgba(217, 180, 92, .06); }
+.chaldean td { width: 44px; height: 32px; text-align: center; font-size: 14px; color: var(--text-3); border-bottom: 1px solid var(--line-soft); }
+.chaldean .used { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background: var(--gold); color: #140c22; font-weight: 700; }

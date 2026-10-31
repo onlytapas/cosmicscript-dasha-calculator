@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Name Numerology · {{ r.name }}{% endblock %}
+{% block body_class %}report{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}" media="print">
+{% endblock %}
+
+{% block content %}
+<nav class="toolbar no-print" aria-label="Report actions">
+    <a href="{{ url_for('main.home') }}#name" class="tb-btn">← New report</a>
+    <span class="tb-title">Name numerology · {{ r.name }}</span>
+    <div class="tb-actions">
+        <button type="button" class="tb-btn" id="editToggle" aria-pressed="true">Editing on</button>
+        <button type="button" class="tb-btn" id="saveHtml">Save HTML</button>
+        <button type="button" class="tb-btn tb-primary" id="printBtn">Print / Save PDF</button>
+    </div>
+</nav>
+
+<article class="doc doc-name">
+
+    <header class="cover">
+        <p class="cover-brand">CosmicScript</p>
+        <h1 class="cover-title">Name Numerology Report</h1>
+        <p class="cover-for">for <strong>{{ r.client_name or r.name }}</strong></p>
+        <dl class="cover-meta">
+            <div><dt>Name analysed</dt><dd>{{ r.name }}</dd></div>
+            <div><dt>Name of</dt><dd>{{ r.owner_label }}</dd></div>
+            <div><dt>Letters counted</dt><dd>{{ r.letter_count }}</dd></div>
+            <div><dt>Report date</dt><dd>{{ r.report_date }}</dd></div>
+        </dl>
+    </header>
+
+    {# ------------------------------------------------------------ Verdict #}
+    <section class="sec">
+        <h2 class="sec-title">The verdict</h2>
+        <div class="glance">
+            <div class="glance-card root">
+                <span class="glance-label">Name total</span>
+                <span class="glance-num">{{ r.total }}</span>
+                <span class="glance-planet">Sum of all the letters</span>
+                <span class="glance-note">Also called the compound number</span>
+            </div>
+            <div class="glance-card destiny">
+                <span class="glance-label">Name number</span>
+                <span class="glance-num">{{ r.name_number }}</span>
+                <span class="glance-planet">{{ r.planet.symbol }} {{ r.planet.name }}</span>
+                <span class="glance-note">{{ r.total }} reduced to one digit</span>
+            </div>
+            <div class="glance-card grade grade-{{ r.grade.level }}">
+                <span class="glance-label">Grade for {{ r.graded_total }}</span>
+                <span class="glance-num grade-word">{{ r.grade.label }}</span>
+                <span class="glance-planet">{{ r.grade.verdict }}</span>
+                {% if r.grade.company %}<span class="glance-note">Noted as suitable for a company name</span>{% endif %}
+            </div>
+        </div>
+
+        <p class="lead verdict-text">
+            The name <strong>{{ r.name }}</strong> adds up to <strong>{{ r.total }}</strong>{% if r.steps %}, and {{ r.total }} reduces to the name number <strong>{{ r.name_number }}</strong>, ruled by {{ r.planet.name }}{% else %}, which is already a single digit, ruled by {{ r.planet.name }}{% endif %}.
+            In Chaldean numerology the total {{ r.graded_total }} is rated <strong>{{ r.grade.label|lower }}</strong>.
+            {{ r.grade.advice }}
+        </p>
+    </section>
+
+    {# ------------------------------------------------------------ Why #}
+    <section class="sec">
+        <h2 class="sec-title">Why {{ r.total }} is rated {{ r.grade.label|lower }}</h2>
+        <div class="callout grade-{{ r.grade.level }}">
+            <span class="num-badge">{{ r.total }}</span>
+            <div>{{ r.compound_meaning }}</div>
+        </div>
+        {% if r.graded_by_digits %}
+        <p class="note">Totals above 100 are graded by the sum of their digits, so {{ r.total }} is graded as {{ r.graded_total }}.</p>
+        {% endif %}
+
+        <h3 class="sub-title">What name number {{ r.name_number }} brings</h3>
+        <div class="profile destiny">
+            <div class="profile-head">
+                <span class="profile-symbol">{{ r.planet.symbol }}</span>
+                <div>
+                    <p class="profile-kicker">Ruling planet</p>
+                    <p class="profile-planet">{{ r.planet.name }}</p>
+                    <p class="profile-keys">{{ r.planet.keywords }}</p>
+                </div>
+            </div>
+            <p>{{ r.digit_meaning }}</p>
+        </div>
+    </section>
+
+    {# ------------------------------------------------------------ Working #}
+    <section class="sec">
+        <h2 class="sec-title">How the number is calculated</h2>
+        <p class="lead">
+            Every letter has a value from 1 to 8 in the Chaldean system. The values of all the letters are added to give the name total,
+            and the digits of that total are added until a single digit remains.
+        </p>
+
+        <div class="working">
+            {% for w in r.words %}
+            <div class="word">
+                <div class="word-letters">
+                    {% for l in w.letters %}
+                    <span class="letter-chip"><span class="letter">{{ l.char }}</span><span class="letter-val">{{ l.value }}</span></span>
+                    {% endfor %}
+                </div>
+                <div class="word-sum">{{ w.expression }} = <b>{{ w.total }}</b></div>
+            </div>
+            {% endfor %}
+
+            <div class="howto-chain total">
+                <span class="chain-lbl">Name total</span>
+                <span class="chain">
+                    {% if r.words|length > 1 %}<span class="chip">{{ r.total_expression }} = <b>{{ r.total }}</b></span>{% else %}<span class="chip chip-start">{{ r.total }}</span>{% endif %}
+                    {% for s in r.steps %}<span class="chain-arrow">→</span><span class="chip">{{ s.expression }} = <b>{{ s.result }}</b></span>{% endfor %}
+                    <span class="chain-arrow">→</span><span class="chip chip-result destiny">{{ r.name_number }}</span>
+                </span>
+            </div>
+        </div>
+
+        <h3 class="sub-title">Chaldean letter values</h3>
+        <table class="chaldean">
+            <thead><tr>{% for col in r.table %}<th>{{ col.value }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in range(5) %}
+                <tr>
+                    {% for col in r.table %}
+                    <td>{% if col.letters[row] %}<span class="{{ 'used' if col.letters[row].used else '' }}">{{ col.letters[row].char }}</span>{% endif %}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="note">Letters used in this name are highlighted. The Chaldean system gives no letter the value 9.</p>
+    </section>
+
+    {# ------------------------------------------------------------ Notes #}
+    <section class="sec">
+        <h2 class="sec-title">Numerologist's guidance <span class="edit-hint no-print">click to edit</span></h2>
+        <div class="editable tall">
+            {% if r.grade.level in ('avoid', 'caution') %}
+            <p><strong>Suggested spellings:</strong> list alternative spellings here with their totals, for example by adding or doubling a letter, and explain which one to adopt.</p>
+            {% else %}
+            <p><strong>Guidance:</strong> add any personal notes for the client, for example how to use this name on documents, signatures and branding.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="doc-footer">
+        <p>This report applies Chaldean name numerology and is offered for guidance only. Interpretations draw on traditional knowledge and should be weighed alongside professional advice.</p>
+        <p class="footer-brand">© {{ r.report_year }} CosmicScript · <a href="https://cosmicscript.in">cosmicscript.in</a>{% if app_version %} · v{{ app_version }}{% endif %}</p>
+    </footer>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/report.js') }}" data-filename="Name_Report_{{ r.name|replace(' ', '_') }}.html"></script>
+{% endblock %}

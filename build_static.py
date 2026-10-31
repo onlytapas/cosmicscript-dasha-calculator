@@ -16,7 +16,7 @@ import json
 from datetime import date
 from pathlib import Path
 
-from numerology import constants, interpretations
+from numerology import constants, interpretations, name_engine, name_interpretations
 
 ROOT = Path(__file__).resolve().parent
 PKG = ROOT / "numerology"
@@ -54,10 +54,20 @@ def build_data(version: str = "") -> dict:
             "NEUTRAL_NUMBERS": interpretations.NEUTRAL_NUMBERS,
             "ENEMY_NUMBERS": interpretations.ENEMY_NUMBERS,
         },
+        "NAME": {
+            "LETTER_VALUES": name_engine.LETTER_VALUES,
+            "CHALDEAN_TABLE": name_engine.CHALDEAN_TABLE,
+            "MAX_GRADED_TOTAL": name_engine.MAX_GRADED_TOTAL,
+            "GRADES": name_interpretations.GRADES,
+            "GRADE_LEVELS": name_interpretations.GRADE_LEVELS,
+            "COMPOUND_MEANINGS": name_interpretations.COMPOUND_MEANINGS,
+            "NAME_NUMBER_MEANINGS": name_interpretations.NAME_NUMBER_MEANINGS,
+        },
         "TEMPLATES": {
             "base.html": STATIC_BASE,
             "home.html": (PKG / "templates" / "home.html").read_text(),
             "report.html": (PKG / "templates" / "report.html").read_text(),
+            "name_report.html": (PKG / "templates" / "name_report.html").read_text(),
             "_grid.html": (PKG / "templates" / "_grid.html").read_text(),
             "_steps.html": (PKG / "templates" / "_steps.html").read_text(),
         },
@@ -78,6 +88,7 @@ def build(version: str | None = None) -> Path:
         "nunjucks": (SRC / "vendor" / "nunjucks.min.js").read_text(),
         "engine": (SRC / "engine.js").read_text(),
         "report": (SRC / "report.js").read_text(),
+        "name": (SRC / "name_engine.js").read_text(),
         "app": (SRC / "app.js").read_text(),
     }
     if version is None:
@@ -111,6 +122,7 @@ def build(version: str | None = None) -> Path:
     <script>window.COSMIC_DATA = {_js_json(data)};</script>
     <script>{parts['engine']}</script>
     <script>{parts['report']}</script>
+    <script>{parts['name']}</script>
     <script>{parts['app']}</script>
 </body>
 </html>

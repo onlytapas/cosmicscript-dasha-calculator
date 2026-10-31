@@ -30,3 +30,18 @@ def parse_birth_date(day: Optional[int], month: Optional[int], year: Optional[in
     except ValueError:
         raise ValueError("That day does not exist in the chosen month.") from None
     return BirthDate(day, month, year)
+
+
+MAX_NAME_LENGTH = 80
+
+
+def parse_name(name: Optional[str]) -> str:
+    """Return a cleaned name for Chaldean analysis or raise ``ValueError``."""
+    cleaned = " ".join((name or "").split())
+    if not cleaned:
+        raise ValueError("Please enter a name to analyse.")
+    if len(cleaned) > MAX_NAME_LENGTH:
+        raise ValueError(f"The name must be {MAX_NAME_LENGTH} characters or fewer.")
+    if not any(ch.isascii() and ch.isalpha() for ch in cleaned):
+        raise ValueError("The name must contain at least one letter from A to Z.")
+    return cleaned
