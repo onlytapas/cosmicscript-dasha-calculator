@@ -135,6 +135,7 @@ def build(version: str | None = None) -> Path:
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols&text=%E2%99%88%E2%99%89%E2%99%8A%E2%99%8B%E2%99%8C%E2%99%8D%E2%99%8E%E2%99%8F%E2%99%90%E2%99%91%E2%99%92%E2%99%93%E2%98%89%E2%98%BD%E2%99%82%E2%98%BF%E2%99%83%E2%99%80%E2%99%84%E2%98%8A%E2%98%8B&display=swap" rel="stylesheet">
     <style>
 {parts['site_css']}
 {parts['report_css']}

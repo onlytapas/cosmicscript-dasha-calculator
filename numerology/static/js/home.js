@@ -177,44 +177,80 @@ window.initHomePage = function () {
     startDust();
 };
 
-// Background: gold-green dust drifting up by day, twinkling stars by night.
+// Background: the numbers 1 to 9, the 12 zodiac signs and the 9 planets of Vedic
+// astrology drift slowly upwards, very faint, behind the page.
+const SKY = {
+    signs: ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'],
+    planets: ['☉', '☽', '♂', '☿', '♃', '♀', '♄', '☊', '☋'],          // Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu
+    numbers: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+};
 function startDust() {
     const c = document.getElementById('dust');
     if (!c || c.dataset.running) return;
     c.dataset.running = '1';
     const ctx = c.getContext('2d');
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // ︎ asks for the plain text form, so iPads do not draw the signs as colour emoji.
+    const SYMBOL_FONT = '"Noto Sans Symbols", "Apple Symbols", "Segoe UI Symbol", serif';
+    const glyphs = [
+        ...SKY.signs.map((t) => ({ t: t + '\uFE0E', style: '', family: SYMBOL_FONT, scale: 1 })),
+        ...SKY.planets.map((t) => ({ t: t + '\uFE0E', style: '', family: SYMBOL_FONT, scale: 1 })),
+        ...SKY.numbers.map((t) => ({ t, style: 'italic 400 ', family: '"Fraunces", Georgia, serif', scale: 1.2 })),
+    ];
+    let next = Math.floor(Math.random() * glyphs.length);   // take symbols in turn so all 30 keep appearing
     let w, h, parts = [];
+    function make(y) {
+        const g = glyphs[next++ % glyphs.length];
+        return {
+            g, x: Math.random() * w, y: y === undefined ? Math.random() * h : y,
+            size: 22 + Math.random() * 14,                 // 22 to 36 px
+            v: .12 + Math.random() * .22,                   // pixels per frame, upwards
+            sway: Math.random() * 6.28, rot: (Math.random() - .5) * .5, spin: (Math.random() - .5) * .0015,
+            alpha: .5 + Math.random() * .5, clay: Math.random() < .3,
+        };
+    }
     function size() {
         const dpr = Math.min(devicePixelRatio || 1, 2);
         w = innerWidth; h = innerHeight;
         c.width = w * dpr; c.height = h * dpr; c.style.width = w + 'px'; c.style.height = h + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        parts = Array.from({ length: Math.round(w * h / 14000) }, () => ({
-            x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.5 + .4,
-            v: Math.random() * .18 + .04, p: Math.random() * 6.28, s: Math.random() * .02 + .005,
-        }));
+        parts = Array.from({ length: Math.round(w * h / 30000) }, () => make());
     }
     function frame(t) {
         if (!document.body.contains(c)) return;            // the static build replaced the page
+        const root = getComputedStyle(document.documentElement);
         const dark = document.documentElement.dataset.mode === 'dark';
-        const rgb = getComputedStyle(document.documentElement).getPropertyValue('--dust').trim();
+        const sage = root.getPropertyValue('--dust').trim();
+        const clay = dark ? '226, 160, 130' : '176, 100, 74';
+        const base = dark ? .30 : .26;                      // faint: never in the way of the reading
         ctx.clearRect(0, 0, w, h);
-        for (const p of parts) {
+        for (let i = 0; i < parts.length; i++) {
+            const p = parts[i];
             if (!still) {
-                p.y -= p.v; p.x += Math.sin(t / 3000 + p.p) * .12;
-                if (p.y < -5) { p.y = h + 5; p.x = Math.random() * w; }
+                p.y -= p.v;
+                p.x += Math.sin(t / 4000 + p.sway) * .15;
+                p.rot += p.spin;
+                if (p.y < -40) parts[i] = make(h + 30);
             }
-            const tw = dark ? .35 + .65 * Math.abs(Math.sin(t * p.s / 10 + p.p)) : .55;
-            ctx.beginPath(); ctx.arc(p.x, p.y, dark ? p.r * .9 : p.r, 0, 6.283);
-            ctx.fillStyle = `rgba(${rgb}, ${(dark ? .85 : .38) * tw})`; ctx.fill();
-            if (dark && p.r > 1.6) { ctx.fillStyle = `rgba(${rgb}, ${.12 * tw})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4, 0, 6.283); ctx.fill(); }
+            // fade in from the bottom and out towards the top
+            const edge = Math.min(1, (h - p.y + 30) / 160, (p.y + 40) / 200);
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.font = `${p.g.style}${Math.round(p.size * p.g.scale)}px ${p.g.family}`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = `rgba(${p.clay ? clay : sage}, ${base * p.alpha * Math.max(0, edge)})`;
+            ctx.fillText(p.g.t, 0, 0);
+            ctx.restore();
         }
         if (!still) requestAnimationFrame(frame);
     }
     size();
     addEventListener('resize', size);
-    requestAnimationFrame(frame);
+    const ready = document.fonts && document.fonts.load ? Promise.all([
+        document.fonts.load('20px "Noto Sans Symbols"', '♈☊'), document.fonts.load('italic 400 20px "Fraunces"', '9'),
+    ]).catch(() => null) : Promise.resolve();
+    ready.then(() => requestAnimationFrame(frame));
 }
 
 if (document.getElementById('readingForm')) window.initHomePage();
