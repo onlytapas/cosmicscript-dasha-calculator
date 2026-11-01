@@ -12,8 +12,8 @@ from datetime import datetime
 from typing import Optional
 
 from numerology import interpretations as text
-from numerology.constants import GRID_LAYOUT, MONTH_NAMES, MONTH_NAMES_SHORT, PLANETS, Planet
-from numerology.engine import digit_sum_once, generate_full_report, safe_date
+from numerology.constants import GRID_LAYOUT, MONTH_NAMES, MONTH_NAMES_SHORT, PLANETS
+from numerology.engine import generate_full_report, safe_date
 
 
 # --------------------------------------------------------------------------- #
@@ -143,7 +143,6 @@ def _grid_cells(grid: dict) -> list[list[dict]]:
 
 
 def _maha_dasha(raw: dict, today: datetime) -> dict:
-    birth = raw["birth_date"]
     periods = []
     for p in raw["dasha_periods"]:
         periods.append({

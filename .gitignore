@@ -1,9 +1,43 @@
+# Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .pytest_cache/
+.coverage
+htmlcov/
+
+# Editors and OS
 .idea/
 .vscode/
 .DS_Store
+
+# Node (test harness only)
+node_modules/
+
+# Secrets: never commit keys, tokens or credentials
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials*.json
+secrets*.json
+*.secret
+.npmrc
+.pypirc
+
+# Local AI-assistant settings
+.claude/
+CLAUDE.local.md
+
+# Private client data: the source spreadsheet and saved reports stay local
+*.xlsx
+*.xls
+*.csv
+reports/
+*.log
