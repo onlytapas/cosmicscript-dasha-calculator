@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
     {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{% if view == 'client' %} client-view{% endif %}">
     <div class="cosmos" aria-hidden="true"></div>
     {% block content %}{% endblock %}
     {% block scripts %}{% endblock %}

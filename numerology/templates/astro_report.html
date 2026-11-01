@@ -13,6 +13,7 @@
     <a href="{{ url_for('main.home') }}#astro" class="tb-btn">← New chart</a>
     <span class="tb-title">{{ r.name or 'Birth chart' }} · {{ r.birth.date }} {{ r.birth.time }}</span>
     <div class="tb-actions">
+        <button type="button" class="tb-btn" id="viewToggle" aria-pressed="false" title="Switch between the full report and the client's copy">Full view</button>
         <button type="button" class="tb-btn" id="editToggle" aria-pressed="true">Editing on</button>
         <button type="button" class="tb-btn" id="saveHtml">Save HTML</button>
         <button type="button" class="tb-btn tb-primary" id="printBtn">Print / Save PDF</button>
@@ -73,14 +74,14 @@
             {% set chart = r.rasi %}{% set title = 'Rasi (D1)' %}{% set style = r.chart_style %}{% include "_chart.html" %}
             {% set chart = r.navamsa %}{% set title = 'Navamsa (D9)' %}{% set style = r.chart_style %}{% include "_chart.html" %}
         </div>
-        <p class="note">
+        <p class="note pro-only">
             {% if r.chart_style == 'south' %}Signs stay in fixed positions; the Lagna sign is marked.{% else %}House 1 is the top diamond; the number in each house is its sign (1 = Aries … 12 = Pisces).{% endif %}
             R marks a retrograde planet. Sidereal zodiac, {{ r.birth.ayanamsa_name|capitalize }} ayanamsa {{ r.birth.ayanamsa.text }}.
         </p>
     </section>
 
     {# ------------------------------------------------------------ Positions #}
-    <section class="sec">
+    <section class="sec pro-only">
         <h2 class="sec-title">Planetary positions</h2>
         <table class="table positions">
             <thead>
@@ -124,7 +125,7 @@
     {# ------------------------------------------------------------ Dasha #}
     <section class="sec page-break">
         <h2 class="sec-title">Vimshottari Dasha</h2>
-        <p class="lead">
+        <p class="lead pro-only">
             The Moon was in <strong>{{ r.dasha.nakshatra }}</strong> at birth, ruled by <strong>{{ r.dasha.nakshatra_lord }}</strong>, so life begins in the
             {{ r.dasha.nakshatra_lord }} Mahadasha with a balance of <strong>{{ r.dasha.balance_text }}</strong>
             ({{ (100 * (1 - r.dasha.fraction_elapsed))|round|int }}% of the nakshatra remained). The first period is shown from its notional start before birth.
@@ -153,6 +154,7 @@
             </tbody>
         </table>
 
+        <div class="pro-only">
         <h3 class="sub-title">Antardasha and Pratyantar dasha</h3>
         <p class="note">Open a Mahadasha to see its nine Antardashas; open an Antardasha to see its Pratyantar periods. The running periods are open by default.</p>
         {% for m in r.dasha.mahadashas %}
@@ -186,10 +188,11 @@
             </table>
         </details>
         {% endfor %}
+        </div>
     </section>
 
     {# ------------------------------------------------------------ Birth data #}
-    <section class="sec">
+    <section class="sec pro-only">
         <h2 class="sec-title">Birth data used</h2>
         <dl class="panchang">
             <div><dt>Local time</dt><dd>{{ r.birth.date }} {{ r.birth.time }} ({{ r.birth.timezone }}, UTC{{ '+' if r.birth.utc_offset >= 0 else '' }}{{ r.birth.utc_offset }})</dd></div>
@@ -214,5 +217,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/report.js') }}" data-filename="Birth_Chart_{{ (r.name or 'Client')|replace(' ', '_') }}.html"></script>
+<script src="{{ url_for('static', filename='js/report.js') }}" data-filename="Birth_Chart_{{ (r.name or 'Client')|replace(' ', '_') }}.html" data-view="{{ view }}"></script>
 {% endblock %}

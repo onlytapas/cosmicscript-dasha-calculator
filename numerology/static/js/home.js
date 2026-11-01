@@ -21,6 +21,7 @@ window.initHomePage = function () {
         });
     }
     autoAdvance(['day', 'month', 'year']);
+    autoAdvance(['name-day', 'name-month', 'name-year']);
     autoAdvance(['astro-day', 'astro-month', 'astro-year']);
     autoAdvance(['astro-hour', 'astro-minute']);
 

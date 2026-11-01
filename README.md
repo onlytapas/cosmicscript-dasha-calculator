@@ -6,11 +6,19 @@ client report:
 * **Dasha calculator** (numerology): Root and Destiny numbers, natal grid, Maha
   Dasha, yearly Antardasha and Pratyantar periods, reproducing the original
   `dasha calculator.xlsx` spreadsheet exactly.
-* **Name numerology**: Chaldean letter values, name total and grade.
+* **Name numerology**: Chaldean letter values, name total and grade, the name
+  matrix, alignment of the name number with the Root and Destiny numbers from
+  the date of birth, and up to two recommended spellings for name correction.
 * **Astrology**: Vedic birth chart from date, time and place: planetary
   positions (Swiss Ephemeris, Lahiri ayanamsa), Rasi and Navamsa charts in
   North or South Indian style, panchang at birth and the full Vimshottari
   Dasha tree (Maha, Antar, Pratyantar), verified against prokerala.com.
+
+Every report has two views, switched from the toolbar: the **full view** for
+the practitioner, with all the working, and the **client view**, which hides
+everything marked `pro-only` in the templates so the client sees only the
+readings. The chosen view is kept in the URL (`view=client`), and "Save HTML"
+in the client view leaves the working out of the saved file.
 
 ## Run
 
@@ -54,6 +62,7 @@ numerology/
   engine.py                 calculations (spreadsheet cell names kept)
   report.py                 engine output -> template view model
   name_engine.py, name_report.py, name_interpretations.py   Chaldean name numerology
+  compatibility.py          friendly / neutral / challenging number lookup
   astro/                    Vedic astrology: ephemeris wrapper, vedic.py arithmetic,
                             places.json (GeoNames, CC BY 4.0), ephe/ Swiss Ephemeris files
   web/                      Flask app factory, routes, form validation

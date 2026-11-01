@@ -10,6 +10,8 @@
 }
 body.report { background: #fff; }
 .cosmos, .toolbar, .no-print, .edit-hint { display: none !important; }
+.matrix-card, .option-card, .analysis { background: #fff; }
+.matrix-card, .option-card, .analysis li { break-inside: avoid; page-break-inside: avoid; }
 .doc { max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: #fff; font-size: 12.5px; }
 .cover-title { -webkit-text-fill-color: #1d1726; background: none; }
 .glance-card, .howto, .year-card, .callout, .chip, .ytag, .weekday-legend li, .lo-shu .cell { background: #fff; }

@@ -114,6 +114,7 @@ def build(version: str | None = None) -> Path:
         "name": (SRC / "name_engine.js").read_text(),
         "astro": (SRC / "astro.js").read_text(),
         "home": (PKG / "static" / "js" / "home.js").read_text(),
+        "toolbar": (PKG / "static" / "js" / "report.js").read_text(),
         "app": (SRC / "app.js").read_text(),
     }
     if version is None:
@@ -150,6 +151,7 @@ def build(version: str | None = None) -> Path:
     <script>{parts['name']}</script>
     <script>{parts['astro']}</script>
     <script>{parts['home']}</script>
+    <script>{parts['toolbar']}</script>
     <script>{parts['app']}</script>
 </body>
 </html>

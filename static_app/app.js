@@ -62,6 +62,16 @@
         return cleaned;
     }
 
+    function parseOptionalName(name) {
+        return (name || '').trim() ? parseName(name) : '';
+    }
+
+    // All three empty -> null; otherwise the date must be complete and valid.
+    function parseOptionalBirthDate(day, month, year) {
+        if (!day && !month && !year) return null;
+        return parseBirthDate(Number(day), Number(month), Number(year));
+    }
+
     // ---- Views ---------------------------------------------------------------
     function showHome(error, tab) {
         document.body.className = 'landing';
@@ -92,6 +102,9 @@
                 name: form.querySelector('#analyse-name').value.trim(),
                 owner: form.querySelector('input[name="owner"]:checked').value,
                 client: form.querySelector('#client').value.trim(),
+                day: form.querySelector('#name-day').value, month: form.querySelector('#name-month').value, year: form.querySelector('#name-year').value,
+                option1: form.querySelector('#option1').value.trim(),
+                option2: form.querySelector('#option2').value.trim(),
             });
             location.hash = '#/name-report?' + params.toString();
         });
@@ -124,24 +137,27 @@
         document.title = 'Numerology Report · ' + (r.client_name || r.dob_short);
         app.innerHTML = env.render('report.html', { r });
         window.scrollTo(0, 0);
-        initToolbar('Report_' + (r.client_name || 'Client').replace(/\s+/g, '_') + '_' + r.dob_short.replace(/\s+/g, '-') + '.html');
+        window.initReportToolbar('Report_' + (r.client_name || 'Client').replace(/\s+/g, '_') + '_' + r.dob_short.replace(/\s+/g, '-') + '.html', params.get('view'));
     }
 
     function showNameReport(params) {
-        let name;
+        let name, birth, options;
         try {
             name = parseName(params.get('name'));
+            birth = parseOptionalBirthDate(params.get('day'), params.get('month'), params.get('year'));
+            options = [parseOptionalName(params.get('option1')), parseOptionalName(params.get('option2'))];
         } catch (e) {
             location.hash = '#/';
             showHome(e.message, 'name');
             return;
         }
-        const r = nameBuilder.buildNameReport(name, params.get('owner') || 'person', params.get('client') || '');
+        const r = nameBuilder.buildNameReport(name, params.get('owner') || 'person', params.get('client') || '', null,
+            birth ? [birth.day, birth.month, birth.year] : null, options);
         document.body.className = 'report';
         document.title = 'Name Numerology · ' + r.name;
         app.innerHTML = env.render('name_report.html', { r });
         window.scrollTo(0, 0);
-        initToolbar('Name_Report_' + r.name.replace(/\s+/g, '_') + '.html');
+        window.initReportToolbar('Name_Report_' + r.name.replace(/\s+/g, '_') + '.html', params.get('view'));
     }
 
     async function showAstroReport(params) {
@@ -179,41 +195,7 @@
         document.title = 'Birth Chart · ' + (r.name || r.birth.date);
         app.innerHTML = env.render('astro_report.html', { r });
         window.scrollTo(0, 0);
-        initToolbar('Birth_Chart_' + (r.name || 'Client').replace(/\s+/g, '_') + '.html');
-    }
-
-    // ---- Report toolbar (same behaviour as numerology/static/js/report.js) ----
-    function initToolbar(filename) {
-        const editToggle = document.getElementById('editToggle');
-        let editing = true;
-
-        function setEditing(on) {
-            editing = on;
-            document.querySelectorAll('.editable').forEach((el) => el.setAttribute('contenteditable', on ? 'true' : 'false'));
-            document.body.classList.toggle('editing-off', !on);
-            editToggle.textContent = on ? 'Editing on' : 'Editing off';
-            editToggle.setAttribute('aria-pressed', String(on));
-        }
-
-        function saveAsHtml() {
-            const wasEditing = editing;
-            setEditing(false);
-            const copy = document.documentElement.cloneNode(true);
-            copy.querySelectorAll('.toolbar, script, .edit-hint, .cosmos').forEach((el) => el.remove());
-            copy.querySelectorAll('[contenteditable]').forEach((el) => el.removeAttribute('contenteditable'));
-            const blob = new Blob(['<!DOCTYPE html>\n' + copy.outerHTML], { type: 'text/html' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(link.href);
-            setEditing(wasEditing);
-        }
-
-        editToggle.addEventListener('click', () => setEditing(!editing));
-        document.getElementById('saveHtml').addEventListener('click', saveAsHtml);
-        document.getElementById('printBtn').addEventListener('click', () => window.print());
-        setEditing(true);
+        window.initReportToolbar('Birth_Chart_' + (r.name || 'Client').replace(/\s+/g, '_') + '.html', params.get('view'));
     }
 
     // ---- Router --------------------------------------------------------------

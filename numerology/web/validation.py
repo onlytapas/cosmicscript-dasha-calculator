@@ -32,6 +32,13 @@ def parse_birth_date(day: Optional[int], month: Optional[int], year: Optional[in
     return BirthDate(day, month, year)
 
 
+def parse_optional_birth_date(day: Optional[int], month: Optional[int], year: Optional[int]) -> Optional[BirthDate]:
+    """None when all three fields are empty; otherwise the date must be complete and valid."""
+    if day is None and month is None and year is None:
+        return None
+    return parse_birth_date(day, month, year)
+
+
 MAX_NAME_LENGTH = 80
 
 
@@ -45,6 +52,11 @@ def parse_name(name: Optional[str]) -> str:
     if not any(ch.isascii() and ch.isalpha() for ch in cleaned):
         raise ValueError("The name must contain at least one letter from A to Z.")
     return cleaned
+
+
+def parse_optional_name(name: Optional[str]) -> str:
+    """An empty field is allowed; anything else is validated like a name."""
+    return parse_name(name) if (name or "").strip() else ""
 
 
 @dataclass(frozen=True)

@@ -31,9 +31,15 @@ DATES = [
 ]
 
 
+# (owner, name, birth or None, options)
 NAMES = [
-    ("person", "Asha Rao"), ("business", "CosmicScript"), ("person", "Mr. O'Brien-Smith 2nd"),
-    ("person", "Z"), ("business", "PPPPPPPPPPPPP"), ("person", "Jean-Luc Picard"), ("person", "Ravi Shankar Prasad"),
+    ("person", "Asha Rao", (29, 1, 1990), ["Aasha Rao", "Asha Raao"]),
+    ("business", "CosmicScript", None, []),
+    ("person", "Mr. O'Brien-Smith 2nd", (8, 1, 1990), ["", "Obrien Smith"]),
+    ("person", "Z", (1, 1, 2000), []),
+    ("business", "PPPPPPPPPPPPP", (31, 12, 1999), ["P"]),
+    ("person", "Jean-Luc Picard", None, ["Jean Luc Picard"]),
+    ("person", "Ravi Shankar Prasad", (11, 11, 1981), ["Ravi Shankar Prasaad", "Ravee Shankar Prasad"]),
 ]
 
 
@@ -64,11 +70,16 @@ def assert_same(a, b, where=""):
 
 @pytest.fixture(scope="module")
 def js_reports(tmp_path_factory):
-    data_file = tmp_path_factory.mktemp("static") / "data.json"
+    folder = tmp_path_factory.mktemp("static")
+    data_file = folder / "data.json"
     data_file.write_text(json.dumps(build_static.build_data()))
-    keys = [f"{d:02d}-{m:02d}-{y}" for d, m, y in DATES] + [f"name:{o}:{n}" for o, n in NAMES]
+    cases_file = folder / "cases.json"
+    cases_file.write_text(json.dumps(
+        [{"key": f"{d:02d}-{m:02d}-{y}", "date": [d, m, y]} for d, m, y in DATES]
+        + [{"key": f"name:{n}", "owner": o, "name": n, "birth": b, "options": opts} for o, n, b, opts in NAMES]
+    ))
     result = subprocess.run(
-        [NODE, str(Path(__file__).parent / "js_harness.js"), str(data_file), TODAY.strftime("%Y-%m-%d"), *keys],
+        [NODE, str(Path(__file__).parent / "js_harness.js"), str(data_file), str(cases_file), TODAY.strftime("%Y-%m-%d")],
         capture_output=True, text=True, check=True,
     )
     return json.loads(result.stdout)
@@ -90,8 +101,8 @@ def test_bundle_builds(tmp_path, monkeypatch):
     assert out.stat().st_size < 1_200_000
 
 
-@pytest.mark.parametrize("owner_name", NAMES, ids=lambda p: p[1])
-def test_javascript_name_report_matches_python(js_reports, owner_name):
-    owner, name = owner_name
-    expected = plain(build_name_report(name, owner, "Client", today=TODAY))
-    assert_same(expected, js_reports[f"name:{owner}:{name}"])
+@pytest.mark.parametrize("case", NAMES, ids=lambda p: p[1])
+def test_javascript_name_report_matches_python(js_reports, case):
+    owner, name, birth, options = case
+    expected = plain(build_name_report(name, owner, "Client", today=TODAY, birth=birth, options=options))
+    assert_same(expected, js_reports[f"name:{name}"])
