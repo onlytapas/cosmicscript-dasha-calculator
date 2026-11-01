@@ -1,18 +1,23 @@
 # CosmicScript · Vedic Numerology Dasha Calculator
 
-Three calculators behind one purple-and-gold front page, each with a printable
-client report:
+Four readings from one front page, in the Sage & Clay theme with a light and
+a dark mode (the switch is top right; the choice is remembered on the device).
+The client's details are entered once, and only the fields the chosen reading
+needs are shown: first, middle (optional) and last name, date of birth, and for
+astrology also gender, time and place of birth.
 
-* **Dasha calculator** (numerology): Root and Destiny numbers, natal grid, Maha
-  Dasha, yearly Antardasha and Pratyantar periods, reproducing the original
+* **Numerology**: Root and Destiny numbers, natal grid, Maha Dasha, yearly
+  Antardasha and Pratyantar periods, reproducing the original
   `dasha calculator.xlsx` spreadsheet exactly.
-* **Name numerology**: Chaldean letter values, name total and grade, the name
-  matrix, alignment of the name number with the Root and Destiny numbers from
-  the date of birth, and up to two recommended spellings for name correction.
-* **Astrology**: Vedic birth chart from date, time and place: planetary
+* **Name Numerology**: Chaldean letter values, name total and grade, the name
+  matrix, and alignment of the name number with the Root and Destiny numbers.
+  Suggested spellings for name correction are typed inside the report.
+* **Astrology · Kundli**: Vedic birth chart from date, time and place: planetary
   positions (Swiss Ephemeris, Lahiri ayanamsa), Rasi and Navamsa charts in
-  North or South Indian style, panchang at birth and the full Vimshottari
-  Dasha tree (Maha, Antar, Pratyantar), verified against prokerala.com.
+  North or South Indian style (switch in the toolbar), panchang at birth and the
+  full Vimshottari Dasha tree, verified against prokerala.com.
+* **Complete Reading**: all three in one report, built by the same functions as
+  the single reports.
 
 Every report has two views, switched from the toolbar: the **full view** for
 the practitioner, with all the working, and the **client view**, which hides
@@ -63,11 +68,12 @@ numerology/
   report.py                 engine output -> template view model
   name_engine.py, name_report.py, name_interpretations.py   Chaldean name numerology
   compatibility.py          friendly / neutral / challenging number lookup
+  complete_report.py        the three reports together
   astro/                    Vedic astrology: ephemeris wrapper, vedic.py arithmetic,
                             places.json (GeoNames, CC BY 4.0), ephe/ Swiss Ephemeris files
   web/                      Flask app factory, routes, form validation
   templates/                base, home, report and partials
-  static/css, static/js     deep purple & gold theme, print rules, toolbar
+  static/css, static/js     Sage & Clay theme (light and dark), print rules, front page, toolbar
 static_app/                 JavaScript ports + single-page shell; vendor/swisseph is the
                             WebAssembly Swiss Ephemeris (GPL/AGPL) loaded only for astrology
 build_static.py             bundles everything into docs/index.html (GitHub Pages)

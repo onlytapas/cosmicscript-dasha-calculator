@@ -171,4 +171,11 @@ def test_home_shows_name_tab_errors(client):
     response = client.get("/name-report?name=")
     assert response.status_code == 302 and "tab=name" in response.headers["Location"]
     html = client.get("/?tab=name&error=Please+enter+a+name").get_data(as_text=True)
-    assert 'data-active-tab="name"' in html and "Please enter a name" in html
+    assert 'value="name" checked' in html and "Please enter a name" in html
+
+
+def test_name_report_has_suggested_spellings_box(client):
+    html = client.get("/name-report?name=Asha%20Rao&day=29&month=1&year=1990").get_data(as_text=True)
+    assert "data-option-form" in html and 'class="sec pro-only"' in html
+    html = client.get("/name-report?name=Asha%20Rao&day=29&month=1&year=1990&option1=Aasha%20Rao").get_data(as_text=True)
+    assert 'value="AASHA RAO"' in html and "Option 1" in html

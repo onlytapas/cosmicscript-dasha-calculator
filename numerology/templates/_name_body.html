@@ -1,0 +1,227 @@
+{# Report sections; expects `r`. Shared by the single report and the Complete Reading. #}
+
+    {# ------------------------------------------------------------ Name matrix #}
+    <section class="sec">
+        <h2 class="sec-title">Name matrix</h2>
+        <p class="lead">
+            Every letter of the name carries a number from 1 to 8. The letters of each part of the name are added together,
+            and the total is reduced to a single digit.
+        </p>
+        <div class="matrix">
+            {% for w in r.words %}
+            <div class="matrix-card">
+                <span class="matrix-role">{{ w.role }}</span>
+                <span class="matrix-word">{{ w.text }}</span>
+                <div class="word-letters pro-only">
+                    {% for l in w.letters %}<span class="letter-chip"><span class="letter">{{ l.char }}</span><span class="letter-val">{{ l.value }}</span></span>{% endfor %}
+                </div>
+                <span class="matrix-sum pro-only">{{ w.expression }} = {{ w.total }}</span>
+                <span class="matrix-nums"><span class="matrix-total">{{ w.total }}</span><span class="chain-arrow">→</span><span class="num-badge sm">{{ w.number }}</span></span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="howto-chain total matrix-total-chain">
+            <span class="chain-lbl">Full name</span>
+            <span class="chain">
+                {% if r.words|length > 1 %}<span class="chip">{{ r.total_expression }} = <b>{{ r.total }}</b></span>{% else %}<span class="chip chip-start">{{ r.total }}</span>{% endif %}
+                {% for s in r.steps %}<span class="chain-arrow">→</span><span class="chip">{{ s.expression }} = <b>{{ s.result }}</b></span>{% endfor %}
+                <span class="chain-arrow">→</span><span class="chip chip-result destiny">{{ r.name_number }}</span>
+            </span>
+        </div>
+    </section>
+
+    {# ------------------------------------------------------------ Current name analysis #}
+    <section class="sec">
+        <h2 class="sec-title">Current name analysis</h2>
+        <ol class="analysis">
+            <li><span class="an-label">Current name</span><span class="an-value">{{ r.name }}</span></li>
+            <li><span class="an-label">Name number</span><span class="an-value"><span class="num-badge destiny">{{ r.name_number }}</span> {{ r.planet.symbol }} {{ r.planet.name }}</span></li>
+            <li><span class="an-label">Compound number</span><span class="an-value"><span class="num-badge">{{ r.total }}</span> <span class="rel grade-{{ r.grade.level }}">{{ r.grade.label }}</span></span></li>
+            <li><span class="an-label">Ruling planet</span><span class="an-value">{{ r.planet.symbol }} {{ r.planet.name }} <span class="muted">· {{ r.planet.keywords|lower }}</span></span></li>
+        </ol>
+
+        <h3 class="sub-title">What the compound number {{ r.total }} means</h3>
+        <div class="callout grade-{{ r.grade.level }}">
+            <span class="num-badge">{{ r.total }}</span>
+            <div>
+                <p>{{ r.compound_meaning }}</p>
+                <p class="callout-advice"><strong>{{ r.grade.verdict }}</strong> {{ r.grade.advice }}</p>
+                {% if r.grade.company %}<p class="note">This total is noted as suitable for a company name.</p>{% endif %}
+                {% if r.graded_by_digits %}<p class="note pro-only">Totals above 100 are graded by the sum of their digits, so {{ r.total }} is graded as {{ r.graded_total }}.</p>{% endif %}
+            </div>
+        </div>
+
+        <h3 class="sub-title">What name number {{ r.name_number }} brings</h3>
+        <div class="profile destiny">
+            <div class="profile-head">
+                <span class="profile-symbol">{{ r.planet.symbol }}</span>
+                <div>
+                    <p class="profile-kicker">Ruling planet</p>
+                    <p class="profile-planet">{{ r.planet.name }}</p>
+                    <p class="profile-keys">{{ r.planet.keywords }}</p>
+                </div>
+            </div>
+            <p>{{ r.digit_meaning }}</p>
+        </div>
+    </section>
+
+    {# ------------------------------------------------------------ Alignment with the birth numbers #}
+    {% if r.birth %}
+    <section class="sec">
+        <h2 class="sec-title">Name and birth alignment</h2>
+        <p class="lead">
+            The date of birth gives two personal numbers: the <strong>Root number</strong>, from the day of birth, and the
+            <strong>Destiny number</strong>, from the whole date. A name works best when its number is friendly to both.
+        </p>
+        <div class="glance">
+            <div class="glance-card root">
+                <span class="glance-label">1 · Root number</span>
+                <span class="glance-num">{{ r.birth.root }}</span>
+                <span class="glance-planet">{{ r.birth.root_planet.symbol }} {{ r.birth.root_planet.name }}</span>
+                <span class="glance-note">From the day of birth</span>
+            </div>
+            <div class="glance-card destiny">
+                <span class="glance-label">2 · Destiny number</span>
+                <span class="glance-num">{{ r.birth.destiny }}</span>
+                <span class="glance-planet">{{ r.birth.destiny_planet.symbol }} {{ r.birth.destiny_planet.name }}</span>
+                <span class="glance-note">From the full date of birth</span>
+            </div>
+            <div class="glance-card name">
+                <span class="glance-label">3 · Name number</span>
+                <span class="glance-num">{{ r.name_number }}</span>
+                <span class="glance-planet">{{ r.planet.symbol }} {{ r.planet.name }}</span>
+                <span class="glance-note">From the current name</span>
+            </div>
+        </div>
+
+        <h3 class="sub-title">Compatibility analysis</h3>
+        <table class="table align-table">
+            <thead><tr><th></th><th>Birth number</th><th>Name number {{ r.name_number }} is</th></tr></thead>
+            <tbody>
+                <tr><th>With the Root number</th><td><span class="num-badge sm root">{{ r.birth.root }}</span> {{ r.birth.root_planet.short_name }}</td><td><span class="rel rel-{{ r.alignment.root.key }}">{{ r.alignment.root.label }}</span></td></tr>
+                <tr><th>With the Destiny number</th><td><span class="num-badge sm destiny">{{ r.birth.destiny }}</span> {{ r.birth.destiny_planet.short_name }}</td><td><span class="rel rel-{{ r.alignment.destiny.key }}">{{ r.alignment.destiny.label }}</span></td></tr>
+            </tbody>
+        </table>
+        <p class="note pro-only">Read from the friendly, neutral and challenging number tables of the Root and Destiny numbers.</p>
+        <div class="editable verdict-text">
+            <p>{{ r.alignment.summary }}</p>
+        </div>
+    </section>
+    {% else %}
+    <section class="sec pro-only">
+        <h2 class="sec-title">Name and birth alignment</h2>
+        <p class="note">Enter the date of birth on the form to compare the name number with the Root and Destiny numbers.</p>
+    </section>
+    {% endif %}
+
+    {# ------------------------------------------------------------ Name correction #}
+    <section class="sec{{ '' if r.options else ' pro-only' }}">
+        <h2 class="sec-title">Name correction</h2>
+        <form class="option-form pro-only no-print" data-option-form>
+            <p class="note">Type up to two suggested spellings to see their numbers and compatibility. Only the results appear in the client's copy.</p>
+            <div class="option-inputs">
+                <label><span>Suggested name 1</span><input name="option1" value="{{ r.options[0].name if r.options|length > 0 else '' }}" maxlength="80" autocomplete="off"></label>
+                <label><span>Suggested name 2</span><input name="option2" value="{{ r.options[1].name if r.options|length > 1 else '' }}" maxlength="80" autocomplete="off"></label>
+                <button type="submit" class="tb-btn tb-primary">Check spellings</button>
+            </div>
+        </form>
+        {% if r.options %}
+        <p class="lead">Recommended spellings, with the numbers each one carries.</p>
+        {% for o in r.options %}
+        <div class="option-card grade-{{ o.grade.level }}">
+            <div class="option-head">
+                <span class="option-kicker">Option {{ loop.index }}</span>
+                <span class="option-name">{{ o.name }}</span>
+            </div>
+            <ul class="option-stats">
+                <li><span>Compound number</span><b>{{ o.total }}</b> <span class="rel grade-{{ o.grade.level }}">{{ o.grade.label }}</span></li>
+                <li><span>Name number</span><span class="num-badge sm destiny">{{ o.name_number }}</span> {{ o.planet.symbol }} {{ o.planet.name }}</li>
+                {% if o.alignment %}
+                <li><span>With Root {{ r.birth.root }}</span><span class="rel rel-{{ o.alignment.root.key }}">{{ o.alignment.root.label }}</span></li>
+                <li><span>With Destiny {{ r.birth.destiny }}</span><span class="rel rel-{{ o.alignment.destiny.key }}">{{ o.alignment.destiny.label }}</span></li>
+                {% endif %}
+            </ul>
+            <div class="working option-working pro-only">
+                {% for w in o.words %}
+                <div class="word">
+                    <div class="word-letters">
+                        {% for l in w.letters %}<span class="letter-chip"><span class="letter">{{ l.char }}</span><span class="letter-val">{{ l.value }}</span></span>{% endfor %}
+                    </div>
+                    <div class="word-sum">{{ w.expression }} = <b>{{ w.total }}</b></div>
+                </div>
+                {% endfor %}
+                <div class="howto-chain total">
+                    <span class="chain-lbl">Name total</span>
+                    <span class="chain">
+                        {% if o.words|length > 1 %}<span class="chip">{{ o.total_expression }} = <b>{{ o.total }}</b></span>{% else %}<span class="chip chip-start">{{ o.total }}</span>{% endif %}
+                        {% for s in o.steps %}<span class="chain-arrow">→</span><span class="chip">{{ s.expression }} = <b>{{ s.result }}</b></span>{% endfor %}
+                        <span class="chain-arrow">→</span><span class="chip chip-result destiny">{{ o.name_number }}</span>
+                    </span>
+                </div>
+            </div>
+            <p class="option-meaning">{{ o.compound_meaning }}</p>
+        </div>
+        {% endfor %}
+        <h3 class="sub-title">Guidance <span class="edit-hint no-print">click to edit</span></h3>
+        <div class="editable">Explain which option to adopt and how to use it on documents, signatures and branding.</div>
+        {% endif %}
+    </section>
+
+    {# ------------------------------------------------------------ Working (practitioner only) #}
+    <section class="sec pro-only">
+        <h2 class="sec-title">How the number is calculated</h2>
+        <p class="lead">
+            Every letter has a value from 1 to 8 in the Chaldean system. The values of all the letters are added to give the name total,
+            and the digits of that total are added until a single digit remains.
+        </p>
+
+        <div class="working">
+            {% for w in r.words %}
+            <div class="word">
+                <div class="word-letters">
+                    {% for l in w.letters %}
+                    <span class="letter-chip"><span class="letter">{{ l.char }}</span><span class="letter-val">{{ l.value }}</span></span>
+                    {% endfor %}
+                </div>
+                <div class="word-sum">{{ w.expression }} = <b>{{ w.total }}</b></div>
+            </div>
+            {% endfor %}
+
+            <div class="howto-chain total">
+                <span class="chain-lbl">Name total</span>
+                <span class="chain">
+                    {% if r.words|length > 1 %}<span class="chip">{{ r.total_expression }} = <b>{{ r.total }}</b></span>{% else %}<span class="chip chip-start">{{ r.total }}</span>{% endif %}
+                    {% for s in r.steps %}<span class="chain-arrow">→</span><span class="chip">{{ s.expression }} = <b>{{ s.result }}</b></span>{% endfor %}
+                    <span class="chain-arrow">→</span><span class="chip chip-result destiny">{{ r.name_number }}</span>
+                </span>
+            </div>
+        </div>
+
+        <h3 class="sub-title">Chaldean letter values</h3>
+        <table class="chaldean">
+            <thead><tr>{% for col in r.table %}<th>{{ col.value }}</th>{% endfor %}</tr></thead>
+            <tbody>
+                {% for row in range(5) %}
+                <tr>
+                    {% for col in r.table %}
+                    <td>{% if col.letters[row] %}<span class="{{ 'used' if col.letters[row].used else '' }}">{{ col.letters[row].char }}</span>{% endif %}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="note">Letters used in this name are highlighted. The Chaldean system gives no letter the value 9.</p>
+    </section>
+
+    {# ------------------------------------------------------------ Notes #}
+    <section class="sec">
+        <h2 class="sec-title">Numerologist's guidance <span class="edit-hint no-print">click to edit</span></h2>
+        <div class="editable tall">
+            {% if r.grade.level in ('avoid', 'caution') %}
+            <p><strong>Suggested spellings:</strong> list alternative spellings here with their totals, for example by adding or doubling a letter, and explain which one to adopt.</p>
+            {% else %}
+            <p><strong>Guidance:</strong> add any personal notes for the client, for example how to use this name on documents, signatures and branding.</p>
+            {% endif %}
+        </div>
+    </section>
+

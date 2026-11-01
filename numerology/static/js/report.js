@@ -35,6 +35,16 @@ window.initReportToolbar = function (filename, initialView) {
         history.replaceState(null, '', url);
     }
 
+    // Re-open this report with some query parameters changed (Flask query string or static-build hash).
+    function reopenWith(changes) {
+        const inHash = location.hash.startsWith('#/');
+        const [path, query] = inHash ? location.hash.split('?') : [location.pathname, location.search.slice(1)];
+        const params = new URLSearchParams(query || '');
+        Object.entries(changes).forEach(([k, v]) => { if (v) params.set(k, v); else params.delete(k); });
+        if (inHash) location.hash = path + '?' + params.toString();
+        else location.href = path + '?' + params.toString();
+    }
+
     function setView(client) {
         clientView = client;
         document.body.classList.toggle('client-view', client);
@@ -65,7 +75,7 @@ window.initReportToolbar = function (filename, initialView) {
         setEditing(false);
 
         const copy = document.documentElement.cloneNode(true);
-        copy.querySelectorAll('.toolbar, script, .edit-hint, .cosmos').forEach((el) => el.remove());
+        copy.querySelectorAll('.toolbar, script, .edit-hint, .aurora, .grain, #dust, .option-form').forEach((el) => el.remove());
         if (clientView) copy.querySelectorAll('.pro-only').forEach((el) => el.remove());
         copy.querySelectorAll('[contenteditable]').forEach((el) => el.removeAttribute('contenteditable'));
         copy.querySelectorAll('.editable:empty').forEach((el) => el.remove());
@@ -80,6 +90,13 @@ window.initReportToolbar = function (filename, initialView) {
 
         setEditing(wasEditing);
     }
+
+    document.querySelectorAll('[data-option-form]').forEach((form) => form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        reopenWith({ option1: form.elements.option1.value.trim(), option2: form.elements.option2.value.trim() });
+    }));
+    const styleToggle = document.getElementById('styleToggle');
+    if (styleToggle) styleToggle.addEventListener('click', () => reopenWith({ style: styleToggle.dataset.style }));
 
     editToggle.addEventListener('click', () => setEditing(!editing));
     viewToggle.addEventListener('click', () => setView(!clientView));

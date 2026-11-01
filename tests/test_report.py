@@ -62,7 +62,15 @@ def client():
 
 def test_home_page_renders(client):
     html = client.get("/").get_data(as_text=True)
-    assert "Dasha report from a date of birth" in html and "Chaldean name numerology" in html
+    for label in ("Complete Reading", "Numerology", "Name Numerology", "Astrology · Kundli", "First name", "Middle name", "Last name"):
+        assert label in html
+    assert 'value="complete" checked' in html and "Suggested name" not in html
+
+
+@pytest.mark.parametrize("tab, reading", [("dasha", "numerology"), ("numerology", "numerology"), ("name", "name"), ("astro", "astro"), ("x", "complete")])
+def test_home_preselects_the_reading(client, tab, reading):
+    html = client.get(f"/?tab={tab}").get_data(as_text=True)
+    assert f'value="{reading}" checked' in html
 
 
 def test_report_page_renders(client):
@@ -74,5 +82,5 @@ def test_report_page_renders(client):
 
 def test_invalid_date_redirects_with_message(client):
     response = client.get("/report?day=31&month=4&year=2000")
-    assert response.status_code == 302
+    assert response.status_code == 302 and "tab=numerology" in response.headers["Location"]
     assert "does+not+exist" in response.headers["Location"] or "does%20not%20exist" in response.headers["Location"]

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Reading · {{ c.name }}{% endblock %}
+{% block body_class %}report{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}" media="print">
+{% endblock %}
+
+{% block content %}
+{% set tb_title = 'Complete reading · ' + c.name %}{% set tb_back = 'complete' %}{% set tb_chart = c.astro.chart_style %}
+{% include "_toolbar.html" %}
+
+<article class="doc doc-complete">
+
+    <header class="cover">
+        <p class="cover-brand">CosmicScript</p>
+        <h1 class="cover-title">Complete Reading</h1>
+        <p class="cover-for">prepared for <strong>{{ c.name }}</strong></p>
+        <dl class="cover-meta cover-meta-grid">
+            <div><dt>Date of birth</dt><dd>{{ c.numerology.dob }}</dd></div>
+            <div><dt>Time of birth</dt><dd>{{ c.astro.birth.time }}</dd></div>
+            <div><dt>Place of birth</dt><dd>{{ c.astro.birth.place }}</dd></div>
+            <div><dt>Report date</dt><dd>{{ c.report_date }}</dd></div>
+        </dl>
+        <ol class="contents">
+            <li><span>I</span>Numerology <i>Root and Destiny numbers, grid and Dasha periods</i></li>
+            <li><span>II</span>Name Numerology <i>Name number, compatibility and name correction</i></li>
+            <li><span>III</span>Astrology <i>Birth chart, planets and Vimshottari Dasha</i></li>
+        </ol>
+    </header>
+
+    <div class="part page-break"><span class="part-num">Part I</span><h2 class="part-title">Numerology</h2></div>
+    {% set r = c.numerology %}
+    {% include "_numerology_body.html" %}
+
+    <div class="part page-break"><span class="part-num">Part II</span><h2 class="part-title">Name Numerology</h2></div>
+    {% set r = c.name_report %}
+    {% include "_name_body.html" %}
+
+    <div class="part page-break"><span class="part-num">Part III</span><h2 class="part-title">Astrology</h2></div>
+    {% set r = c.astro %}
+    {% include "_astro_body.html" %}
+
+    <footer class="doc-footer">
+        <p>This reading combines Vedic numerology, Chaldean name numerology and Vedic astrology (Swiss Ephemeris, Lahiri ayanamsa). It is offered for guidance only and should be weighed alongside professional advice.</p>
+        <p class="footer-brand">© {{ c.report_year }} CosmicScript · <a href="https://cosmicscript.in">cosmicscript.in</a>{% if app_version %} · v{{ app_version }}{% endif %}</p>
+    </footer>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/report.js') }}" data-filename="Complete_Reading_{{ c.name|replace(' ', '_') }}.html" data-view="{{ view }}"></script>
+{% endblock %}

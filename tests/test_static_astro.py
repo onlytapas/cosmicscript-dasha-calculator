@@ -81,10 +81,10 @@ def site(tmp_path_factory):
     server.shutdown()
 
 
-def browser_json(site_url: str, case: dict) -> dict:
+def browser_json(site_url: str, case: dict, page: str = "astro-report") -> dict:
     """Load the page in headless Chrome; retry if the snapshot came before the ephemeris finished loading."""
     query = "&".join(f"{k}={v}" for k, v in case.items()).replace(" ", "%20")
-    url = f"{site_url}#/astro-report?{query}&format=json&today=2026-10-31T00:00:00Z"
+    url = f"{site_url}#/{page}?{query}&format=json&today=2026-10-31T00:00:00Z"
     text = ""
     for _ in range(3):
         out = subprocess.run(
@@ -105,3 +105,12 @@ def test_browser_matches_python(site, case):
     expected = plain(build_astro_report(case["name"], case["gender"], case["year"], case["month"], case["day"],
                                         case["hour"], case["minute"], place, chart_style=case["style"], today=TODAY))
     assert_same(expected, browser_json(site, case))
+
+
+def test_browser_complete_reading_matches_python(site):
+    from numerology.complete_report import build_complete_report
+    case = dict(CASES[0], option1="Aasha Rao")
+    expected = plain(build_complete_report(case["name"], case["gender"], case["day"], case["month"], case["year"], case["hour"],
+                                           case["minute"], find_place(case["place"]), chart_style=case["style"],
+                                           options=["Aasha Rao", ""], today=TODAY))
+    assert_same(expected, browser_json(site, case, page="complete-report"))

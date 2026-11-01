@@ -29,6 +29,12 @@ DIST = ROOT / "docs"
 # A minimal base so the Flask templates render as fragments inside the shell.
 STATIC_BASE = "{% block content %}{% endblock %}"
 
+TEMPLATE_FILES = (
+    "home.html", "report.html", "name_report.html", "astro_report.html", "complete_report.html",
+    "_numerology_body.html", "_name_body.html", "_astro_body.html",
+    "_toolbar.html", "_mode.html", "_chart.html", "_grid.html", "_steps.html",
+)
+
 
 def build_data(version: str = "") -> dict:
     """Everything the JavaScript side needs, taken straight from the Python modules."""
@@ -86,13 +92,7 @@ def build_data(version: str = "") -> dict:
         },
         "TEMPLATES": {
             "base.html": STATIC_BASE,
-            "home.html": (PKG / "templates" / "home.html").read_text(),
-            "report.html": (PKG / "templates" / "report.html").read_text(),
-            "name_report.html": (PKG / "templates" / "name_report.html").read_text(),
-            "astro_report.html": (PKG / "templates" / "astro_report.html").read_text(),
-            "_chart.html": (PKG / "templates" / "_chart.html").read_text(),
-            "_grid.html": (PKG / "templates" / "_grid.html").read_text(),
-            "_steps.html": (PKG / "templates" / "_steps.html").read_text(),
+            **{name: (PKG / "templates" / name).read_text() for name in TEMPLATE_FILES},
         },
     }
 
@@ -113,6 +113,7 @@ def build(version: str | None = None) -> Path:
         "report": (SRC / "report.js").read_text(),
         "name": (SRC / "name_engine.js").read_text(),
         "astro": (SRC / "astro.js").read_text(),
+        "theme": (PKG / "static" / "js" / "theme.js").read_text(),
         "home": (PKG / "static" / "js" / "home.js").read_text(),
         "toolbar": (PKG / "static" / "js" / "report.js").read_text(),
         "app": (SRC / "app.js").read_text(),
@@ -126,13 +127,14 @@ def build(version: str | None = None) -> Path:
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0a0612">
-    <meta name="description" content="CosmicScript Vedic numerology Dasha calculator and report">
-    <title>CosmicScript · Vedic Numerology</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f2eee4">
+    <meta name="description" content="CosmicScript numerology, name numerology and Vedic astrology readings">
+    <title>CosmicScript · Numerology and Astrology</title>
+    <script>{parts['theme']}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
 {parts['site_css']}
 {parts['report_css']}
@@ -142,7 +144,8 @@ def build(version: str | None = None) -> Path:
     </style>
 </head>
 <body class="landing">
-    <div class="cosmos" aria-hidden="true"></div>
+    <div class="aurora" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+    <div class="grain" aria-hidden="true"></div>
     <div id="app"></div>
     <script>{parts['nunjucks']}</script>
     <script>window.COSMIC_DATA = {_js_json(data)};</script>

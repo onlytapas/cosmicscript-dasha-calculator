@@ -1,174 +1,77 @@
 {% extends "base.html" %}
 
-{% block title %}CosmicScript · Numerology Calculators{% endblock %}
+{% block title %}CosmicScript · Numerology and Astrology{% endblock %}
 {% block body_class %}landing{% endblock %}
 
 {% block content %}
-<main class="landing-main">
-    <div class="brand">
-        <div class="brand-mark">☉</div>
-        <h1 class="brand-title">CosmicScript</h1>
-        <p class="brand-sub">Vedic Numerology · Dasha Analysis</p>
-    </div>
+<canvas id="dust" aria-hidden="true"></canvas>
+<div class="page">
+    <header class="top rise" style="--d:0">
+        <a class="wordmark" href="{{ url_for('main.home') }}">Cosmic<span>Script</span></a>
+        {% include "_mode.html" %}
+    </header>
 
-    <div class="entry-card" data-active-tab="{{ tab or 'dasha' }}">
-        <div class="tabs" role="tablist">
-            <button type="button" class="tab" role="tab" data-tab="dasha" aria-selected="{{ 'true' if tab not in ['name', 'astro'] else 'false' }}">Dasha Calculator</button>
-            <button type="button" class="tab" role="tab" data-tab="name" aria-selected="{{ 'true' if tab == 'name' else 'false' }}">Name Numerology</button>
-            <button type="button" class="tab" role="tab" data-tab="astro" aria-selected="{{ 'true' if tab == 'astro' else 'false' }}">Astrology</button>
-        </div>
+    <form class="main" id="readingForm" novalidate autocomplete="off">
+        <section>
+            <p class="eyebrow rise" style="--d:1">Numerology · Name · Astrology</p>
+            <h1 class="headline">Every life is <em>written</em> in numbers and stars.</h1>
+            <div class="choose rise" style="--d:5"><p id="chooseLabel">Choose a reading</p><span>Tap a card to select</span></div>
+            <fieldset class="choices" role="radiogroup" aria-labelledby="chooseLabel">
+                <label class="reading" style="--i:0">
+                    <input type="radio" name="reading" value="complete" {{ 'checked' if reading == 'complete' else '' }}>
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><path class="d" d="M20 4l3.6 12.4L36 20l-12.4 3.6L20 36l-3.6-12.4L4 20l12.4-3.6z"/><path class="d" d="M32 6v5M29.5 8.5h5M8 30v4M6 32h4"/></svg></span><span class="r-tag">All in one</span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
+                    <span class="r-title">Complete Reading</span>
+                    <span class="r-desc">Numerology, name and birth chart together</span>
+                </label>
+                <label class="reading" style="--i:1">
+                    <input type="radio" name="reading" value="numerology" {{ 'checked' if reading == 'numerology' else '' }}>
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><rect class="d" x="6" y="6" width="28" height="28" rx="2"/><path class="d" d="M15.3 6v28M24.7 6v28M6 15.3h28M6 24.7h28"/><circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none"/><circle cx="10.6" cy="29.4" r="1.6" fill="currentColor" stroke="none"/><circle cx="29.4" cy="10.6" r="1.6" fill="currentColor" stroke="none"/></svg></span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
+                    <span class="r-title">Numerology</span>
+                    <span class="r-desc">Root and Destiny numbers, grid and Dasha periods</span>
+                </label>
+                <label class="reading" style="--i:2">
+                    <input type="radio" name="reading" value="name" {{ 'checked' if reading == 'name' else '' }}>
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><path class="d" d="M6 31l7.5-21L21 31M9 23.5h9"/><path class="d" d="M33 31v-9.5a4.5 4.5 0 0 0-8.5-2M33 25.5c-4.5 0-8.5.6-8.5 3.2 0 2.6 4.2 3.2 8.5-.7"/></svg></span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
+                    <span class="r-title">Name Numerology</span>
+                    <span class="r-desc">Name number, compatibility and name correction</span>
+                </label>
+                <label class="reading" style="--i:3">
+                    <input type="radio" name="reading" value="astro" {{ 'checked' if reading == 'astro' else '' }}>
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><rect class="d" x="6" y="6" width="28" height="28"/><path class="d" d="M6 6l28 28M34 6L6 34M20 6l14 14-14 14L6 20z"/></svg></span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
+                    <span class="r-title">Astrology · Kundli</span>
+                    <span class="r-desc">Birth chart, planets and Vimshottari Dasha</span>
+                </label>
+            </fieldset>
+        </section>
 
-        <form class="tab-panel {{ 'active' if tab not in ['name', 'astro'] else '' }}" data-panel="dasha" action="{{ url_for('main.report') }}" method="get" autocomplete="off">
-            <h2 class="entry-heading">Dasha report from a date of birth</h2>
-
-            <div class="field">
-                <label for="name">Client name</label>
-                <input type="text" id="name" name="name" placeholder="Full name" maxlength="80">
+        <section class="card rise" style="--d:6">
+            <p class="card-kicker">Client details</p>
+            <h2 class="card-title" id="cardTitle"></h2>
+            <div class="row">
+                <div class="f" data-f="first"><label for="first">First name</label><input id="first" name="first" placeholder="As spelt" maxlength="40"></div>
+                <div class="f" data-f="middle"><label for="middle">Middle name</label><input id="middle" name="middle" placeholder="Optional" maxlength="40"></div>
+                <div class="f" data-f="last"><label for="last">Last name</label><input id="last" name="last" placeholder="As spelt" maxlength="40"></div>
             </div>
-
-            <fieldset class="field-row">
-                <legend>Date of birth</legend>
-                <div class="field">
-                    <label for="day">Day</label>
-                    <input type="number" id="day" name="day" min="1" max="31" placeholder="DD" inputmode="numeric" required>
-                </div>
-                <div class="field">
-                    <label for="month">Month</label>
-                    <input type="number" id="month" name="month" min="1" max="12" placeholder="MM" inputmode="numeric" required>
-                </div>
-                <div class="field field-wide">
-                    <label for="year">Year</label>
-                    <input type="number" id="year" name="year" min="1900" max="2099" placeholder="YYYY" inputmode="numeric" required>
-                </div>
-            </fieldset>
-
-            {% if error and tab not in ['name', 'astro'] %}
-            <p class="form-error" role="alert">{{ error }}</p>
-            {% endif %}
-
-            <button type="submit" class="btn-primary">✦ Generate Dasha Report ✦</button>
-        </form>
-
-        <form class="tab-panel {{ 'active' if tab == 'name' else '' }}" data-panel="name" action="{{ url_for('main.name_report') }}" method="get" autocomplete="off">
-            <h2 class="entry-heading">Chaldean name numerology</h2>
-
-            <div class="field">
-                <label for="analyse-name">Current name</label>
-                <input type="text" id="analyse-name" name="name" placeholder="Name exactly as it is spelt" maxlength="80" required>
+            <div class="row">
+                <div class="f" data-f="dob"><span class="lbl" id="dobLabel">Date of birth</span><div class="split" role="group" aria-labelledby="dobLabel"><input id="day" name="day" placeholder="DD" inputmode="numeric" maxlength="2" aria-label="Day"><input id="month" name="month" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Month"><input id="year" name="year" class="yr" placeholder="YYYY" inputmode="numeric" maxlength="4" aria-label="Year"></div></div>
+                <div class="f" data-f="gender"><span class="lbl">Gender</span><div class="seg" role="radiogroup" aria-label="Gender"><label><input type="radio" name="gender" value="female" checked>Female</label><label><input type="radio" name="gender" value="male">Male</label></div></div>
             </div>
-
-            <fieldset class="field-row choice-row">
-                <legend>This name belongs to</legend>
-                <label class="choice"><input type="radio" name="owner" value="person" checked> A person</label>
-                <label class="choice"><input type="radio" name="owner" value="business"> A business</label>
-            </fieldset>
-
-            <div class="field">
-                <label for="client">Client name <span class="optional">if different from the name above</span></label>
-                <input type="text" id="client" name="client" placeholder="Who the report is for" maxlength="80">
+            <div class="row">
+                <div class="f" data-f="time" style="flex-grow:.8"><span class="lbl" id="timeLabel">Time of birth</span><div class="split" role="group" aria-labelledby="timeLabel"><input id="hour" name="hour" placeholder="HH" inputmode="numeric" maxlength="2" aria-label="Hour, 24-hour clock"><input id="minute" name="minute" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Minute"></div></div>
+                <div class="f place-field" data-f="place"><label for="place">Place of birth</label><input id="place" name="place" placeholder="Town or city" maxlength="120"><ul class="suggestions" id="place-suggestions" hidden></ul></div>
             </div>
+            {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+            <p class="form-error" id="formError" role="alert" hidden></p>
+            <button type="submit" class="btn-3d" id="go"><span class="label" id="goText">Generate</span></button>
+        </section>
+    </form>
 
-            <fieldset class="field-row">
-                <legend>Date of birth <span class="optional">for the Root and Destiny alignment</span></legend>
-                <div class="field">
-                    <label for="name-day">Day</label>
-                    <input type="number" id="name-day" name="day" min="1" max="31" placeholder="DD" inputmode="numeric">
-                </div>
-                <div class="field">
-                    <label for="name-month">Month</label>
-                    <input type="number" id="name-month" name="month" min="1" max="12" placeholder="MM" inputmode="numeric">
-                </div>
-                <div class="field field-wide">
-                    <label for="name-year">Year</label>
-                    <input type="number" id="name-year" name="year" min="1900" max="2099" placeholder="YYYY" inputmode="numeric">
-                </div>
-            </fieldset>
-
-            <fieldset class="field-row">
-                <legend>Recommended name options <span class="optional">for the name correction section</span></legend>
-                <div class="field field-wide">
-                    <label for="option1">Option 1</label>
-                    <input type="text" id="option1" name="option1" placeholder="Suggested spelling" maxlength="80">
-                </div>
-                <div class="field field-wide">
-                    <label for="option2">Option 2</label>
-                    <input type="text" id="option2" name="option2" placeholder="Suggested spelling" maxlength="80">
-                </div>
-            </fieldset>
-
-            {% if error and tab == 'name' %}
-            <p class="form-error" role="alert">{{ error }}</p>
-            {% endif %}
-
-            <button type="submit" class="btn-primary">✦ Analyse Name ✦</button>
-        </form>
-
-        <form class="tab-panel {{ 'active' if tab == 'astro' else '' }}" data-panel="astro" action="{{ url_for('main.astro_report') }}" method="get" autocomplete="off">
-            <h2 class="entry-heading">Vedic birth chart &amp; Vimshottari Dasha</h2>
-
-            <div class="field">
-                <label for="astro-name">Name</label>
-                <input type="text" id="astro-name" name="name" placeholder="Full name" maxlength="80">
-            </div>
-
-            <fieldset class="field-row choice-row">
-                <legend>Gender</legend>
-                <label class="choice"><input type="radio" name="gender" value="female" checked> Female</label>
-                <label class="choice"><input type="radio" name="gender" value="male"> Male</label>
-            </fieldset>
-
-            <fieldset class="field-row">
-                <legend>Date of birth</legend>
-                <div class="field">
-                    <label for="astro-day">Day</label>
-                    <input type="number" id="astro-day" name="day" min="1" max="31" placeholder="DD" inputmode="numeric" required>
-                </div>
-                <div class="field">
-                    <label for="astro-month">Month</label>
-                    <input type="number" id="astro-month" name="month" min="1" max="12" placeholder="MM" inputmode="numeric" required>
-                </div>
-                <div class="field field-wide">
-                    <label for="astro-year">Year</label>
-                    <input type="number" id="astro-year" name="year" min="1900" max="2099" placeholder="YYYY" inputmode="numeric" required>
-                </div>
-            </fieldset>
-
-            <fieldset class="field-row">
-                <legend>Time of birth <span class="optional">24-hour clock</span></legend>
-                <div class="field">
-                    <label for="astro-hour">Hour</label>
-                    <input type="number" id="astro-hour" name="hour" min="0" max="23" placeholder="HH" inputmode="numeric" required>
-                </div>
-                <div class="field">
-                    <label for="astro-minute">Minute</label>
-                    <input type="number" id="astro-minute" name="minute" min="0" max="59" placeholder="MM" inputmode="numeric" required>
-                </div>
-            </fieldset>
-
-            <div class="field place-field">
-                <label for="astro-place">Place of birth</label>
-                <input type="text" id="astro-place" name="place" placeholder="Start typing the town or city" maxlength="120" required>
-                <ul class="suggestions" id="place-suggestions" hidden></ul>
-            </div>
-
-            <fieldset class="field-row choice-row">
-                <legend>Chart style</legend>
-                <label class="choice"><input type="radio" name="style" value="north" checked> North Indian</label>
-                <label class="choice"><input type="radio" name="style" value="south"> South Indian</label>
-            </fieldset>
-
-            {% if error and tab == 'astro' %}
-            <p class="form-error" role="alert">{{ error }}</p>
-            {% endif %}
-
-            <button type="submit" class="btn-primary">✦ Generate Birth Chart ✦</button>
-        </form>
-    </div>
-
-    <p class="landing-foot">Numerology · Name Numbers · Birth Chart · Vimshottari Dasha</p>
-</main>
+    <footer class="bottom rise" style="--d:7">
+        <span>© CosmicScript</span><span>Full view for you · Client view to share</span>
+    </footer>
+</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}" data-base="/"></script>
 {% endblock %}

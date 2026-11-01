@@ -40,7 +40,10 @@
         return { src, path: name, noCache: false };
     };
     const env = new nunjucks.Environment(new TemplateLoader(), { autoescape: true });
-    env.addGlobal('url_for', (endpoint) => ({ 'main.report': '#/report', 'main.name_report': '#/name-report', 'main.astro_report': '#/astro-report' }[endpoint] || '#/'));
+    env.addGlobal('url_for', (endpoint) => ({
+        'main.report': '#/report', 'main.name_report': '#/name-report', 'main.astro_report': '#/astro-report', 'main.complete_report': '#/complete-report',
+    }[endpoint] || '#/'));
+    window.cosmicRouteBase = '#/';
     env.addGlobal('app_version', DATA.VERSION);
 
     const app = document.getElementById('app');
@@ -73,143 +76,133 @@
     }
 
     // ---- Views ---------------------------------------------------------------
-    function showHome(error, tab) {
-        document.body.className = 'landing';
-        document.title = 'CosmicScript · Numerology Calculators';
-        app.innerHTML = env.render('home.html', { error: error || '', tab: tab || 'dasha' });
-        window.scrollTo(0, 0);
-
-        window.initHomePage();
-
-        app.querySelector('form[data-panel="astro"]').addEventListener('submit', (event) => {
-            event.preventDefault();
-            const f = event.target;
-            const params = new URLSearchParams({
-                name: f.querySelector('#astro-name').value.trim(),
-                gender: f.querySelector('input[name="gender"]:checked').value,
-                day: f.querySelector('#astro-day').value, month: f.querySelector('#astro-month').value, year: f.querySelector('#astro-year').value,
-                hour: f.querySelector('#astro-hour').value, minute: f.querySelector('#astro-minute').value,
-                place: f.querySelector('#astro-place').value.trim(),
-                style: f.querySelector('input[name="style"]:checked').value,
-            });
-            location.hash = '#/astro-report?' + params.toString();
-        });
-
-        app.querySelector('form[data-panel="name"]').addEventListener('submit', (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const params = new URLSearchParams({
-                name: form.querySelector('#analyse-name').value.trim(),
-                owner: form.querySelector('input[name="owner"]:checked').value,
-                client: form.querySelector('#client').value.trim(),
-                day: form.querySelector('#name-day').value, month: form.querySelector('#name-month').value, year: form.querySelector('#name-year').value,
-                option1: form.querySelector('#option1').value.trim(),
-                option2: form.querySelector('#option2').value.trim(),
-            });
-            location.hash = '#/name-report?' + params.toString();
-        });
-
-        const day = document.getElementById('day');
-        const month = document.getElementById('month');
-        const year = document.getElementById('year');
-
-        app.querySelector('form[data-panel="dasha"]').addEventListener('submit', (event) => {
-            event.preventDefault();
-            const params = new URLSearchParams({
-                day: day.value, month: month.value, year: year.value,
-                name: document.getElementById('name').value.trim(),
-            });
-            location.hash = '#/report?' + params.toString();
-        });
+    // Back to the front page with a message, without triggering another route change.
+    function backHome(message, reading) {
+        history.replaceState(null, '', location.pathname + location.search + '#/?tab=' + reading);
+        showHome(message, reading);
     }
+
+    function showHome(error, reading) {
+        const READINGS = { complete: 'complete', numerology: 'numerology', dasha: 'numerology', name: 'name', astro: 'astro' };
+        document.body.className = 'landing';
+        document.title = 'CosmicScript · Numerology and Astrology';
+        app.innerHTML = env.render('home.html', { error: error || '', reading: READINGS[reading] || 'complete' });
+        window.scrollTo(0, 0);
+        window.initHomePage();
+    }
+
+    function render(template, context, title, filename, params) {
+        document.body.className = 'report';
+        document.title = title;
+        app.innerHTML = env.render(template, context);
+        window.scrollTo(0, 0);
+        window.initReportToolbar(filename, params.get('view'));
+    }
+
+    const fileName = (prefix, name) => prefix + '_' + (name || 'Client').replace(/\s+/g, '_') + '.html';
 
     function showReport(params) {
         let birth;
         try {
             birth = parseBirthDate(Number(params.get('day')), Number(params.get('month')), Number(params.get('year')));
-        } catch (e) {
-            location.hash = '#/';
-            showHome(e.message);
-            return;
-        }
+        } catch (e) { backHome(e.message, 'numerology'); return; }
         const r = builder.buildReport(birth.day, birth.month, birth.year, params.get('name') || '');
-        document.body.className = 'report';
-        document.title = 'Numerology Report · ' + (r.client_name || r.dob_short);
-        app.innerHTML = env.render('report.html', { r });
-        window.scrollTo(0, 0);
-        window.initReportToolbar('Report_' + (r.client_name || 'Client').replace(/\s+/g, '_') + '_' + r.dob_short.replace(/\s+/g, '-') + '.html', params.get('view'));
+        render('report.html', { r }, 'Numerology Report · ' + (r.client_name || r.dob_short),
+            'Report_' + (r.client_name || 'Client').replace(/\s+/g, '_') + '_' + r.dob_short.replace(/\s+/g, '-') + '.html', params);
+    }
+
+    function nameInputs(params) {
+        return {
+            name: parseName(params.get('name')),
+            options: [parseOptionalName(params.get('option1')), parseOptionalName(params.get('option2'))],
+        };
     }
 
     function showNameReport(params) {
-        let name, birth, options;
+        let input, birth;
         try {
-            name = parseName(params.get('name'));
+            input = nameInputs(params);
             birth = parseOptionalBirthDate(params.get('day'), params.get('month'), params.get('year'));
-            options = [parseOptionalName(params.get('option1')), parseOptionalName(params.get('option2'))];
-        } catch (e) {
-            location.hash = '#/';
-            showHome(e.message, 'name');
-            return;
-        }
-        const r = nameBuilder.buildNameReport(name, params.get('owner') || 'person', params.get('client') || '', null,
-            birth ? [birth.day, birth.month, birth.year] : null, options);
+        } catch (e) { backHome(e.message, 'name'); return; }
+        const r = nameBuilder.buildNameReport(input.name, params.get('owner') || 'person', params.get('client') || '', null,
+            birth ? [birth.day, birth.month, birth.year] : null, input.options);
+        render('name_report.html', { r }, 'Name Numerology · ' + r.name, fileName('Name_Report', r.name), params);
+    }
+
+    // Date, time and place of birth (mirrors _birth_details in numerology/web/routes.py).
+    function birthDetails(params) {
+        const birth = parseBirthDate(Number(params.get('day')), Number(params.get('month')), Number(params.get('year')));
+        const hour = Number(params.get('hour')), minute = Number(params.get('minute'));
+        if (!params.get('hour') || !params.get('minute') || Number.isNaN(hour) || Number.isNaN(minute)) throw new Error('Please enter the time of birth (hours and minutes).');
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Time of birth must be between 00:00 and 23:59.');
+        const place = placeIndex.findPlace(params.get('place') || '');
+        if (!place) throw new Error('Please choose the place of birth from the list of suggestions.');
+        return { birth, time: { hour, minute }, place };
+    }
+
+    async function astroEngine() {
         document.body.className = 'report';
-        document.title = 'Name Numerology · ' + r.name;
-        app.innerHTML = env.render('name_report.html', { r });
-        window.scrollTo(0, 0);
-        window.initReportToolbar('Name_Report_' + r.name.replace(/\s+/g, '_') + '.html', params.get('view'));
+        app.innerHTML = '<p class="loading">Calculating planetary positions…</p>';
+        try {
+            return await loadAstro();
+        } catch (e) {
+            app.innerHTML = '<p class="loading">The astronomy library could not be loaded. Check the internet connection and try again.</p>';
+            return null;
+        }
+    }
+
+    function showJson(model) {
+        app.innerHTML = '<pre id="json"></pre>';
+        document.getElementById('json').textContent = JSON.stringify(model);
     }
 
     async function showAstroReport(params) {
-        let birth, time, place;
-        try {
-            birth = parseBirthDate(Number(params.get('day')), Number(params.get('month')), Number(params.get('year')));
-            const hour = Number(params.get('hour')), minute = Number(params.get('minute'));
-            if (params.get('hour') === '' || params.get('minute') === '' || Number.isNaN(hour) || Number.isNaN(minute)) throw new Error('Please enter the time of birth (hours and minutes).');
-            if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Time of birth must be between 00:00 and 23:59.');
-            time = { hour, minute };
-            place = placeIndex.findPlace(params.get('place') || '');
-            if (!place) throw new Error('Please choose the place of birth from the list of suggestions.');
-        } catch (e) {
-            location.hash = '#/';
-            showHome(e.message, 'astro');
-            return;
-        }
-        document.body.className = 'report';
-        app.innerHTML = '<p class="loading">Calculating planetary positions…</p>';
-        let astro;
-        try {
-            astro = await loadAstro();
-        } catch (e) {
-            app.innerHTML = '<p class="loading">The astronomy library could not be loaded. Check the internet connection and try again.</p>';
-            return;
-        }
+        let d;
+        try { d = birthDetails(params); } catch (e) { backHome(e.message, 'astro'); return; }
+        const astro = await astroEngine();
+        if (!astro) return;
         const nowMs = params.get('today') ? Date.parse(params.get('today')) : Date.now();
-        const r = astro.buildAstroReport(params.get('name') || '', params.get('gender') || '', birth.year, birth.month, birth.day,
-            time.hour, time.minute, place, params.get('style') || 'north', 'lahiri', nowMs);
-        if (params.get('format') === 'json') {
-            app.innerHTML = '<pre id="json"></pre>';
-            document.getElementById('json').textContent = JSON.stringify(r);
-            return;
-        }
-        document.title = 'Birth Chart · ' + (r.name || r.birth.date);
-        app.innerHTML = env.render('astro_report.html', { r });
-        window.scrollTo(0, 0);
-        window.initReportToolbar('Birth_Chart_' + (r.name || 'Client').replace(/\s+/g, '_') + '.html', params.get('view'));
+        const r = astro.buildAstroReport(params.get('name') || '', params.get('gender') || '', d.birth.year, d.birth.month, d.birth.day,
+            d.time.hour, d.time.minute, d.place, params.get('style') || 'north', 'lahiri', nowMs);
+        if (params.get('format') === 'json') { showJson(r); return; }
+        render('astro_report.html', { r }, 'Birth Chart · ' + (r.name || r.birth.date), fileName('Birth_Chart', r.name), params);
+    }
+
+    // The Complete Reading (mirrors numerology/complete_report.py).
+    async function showCompleteReport(params) {
+        let input, d;
+        try {
+            input = nameInputs(params);
+            d = birthDetails(params);
+        } catch (e) { backHome(e.message, 'complete'); return; }
+        const astro = await astroEngine();
+        if (!astro) return;
+        const nowMs = params.get('today') ? Date.parse(params.get('today')) : Date.now();
+        const today = params.get('today') ? new Date(params.get('today').slice(0, 10) + 'T00:00:00Z') : null;
+        const { day, month, year } = d.birth;
+        const todayUTC = today || engine.todayUTC();
+        const c = {
+            name: input.name,
+            report_date: builder.formatDateLong(todayUTC),
+            report_year: todayUTC.getUTCFullYear(),
+            numerology: builder.buildReport(day, month, year, input.name, today || undefined),
+            name_report: nameBuilder.buildNameReport(input.name, 'person', input.name, today, [day, month, year], input.options),
+            astro: astro.buildAstroReport(input.name, params.get('gender') || '', year, month, day, d.time.hour, d.time.minute, d.place,
+                params.get('style') || 'north', 'lahiri', nowMs),
+        };
+        if (params.get('format') === 'json') { showJson(c); return; }
+        render('complete_report.html', { c }, 'Complete Reading · ' + c.name, fileName('Complete_Reading', c.name), params);
     }
 
     // ---- Router --------------------------------------------------------------
+    const VIEWS = { 'report': showReport, 'name-report': showNameReport, 'astro-report': showAstroReport, 'complete-report': showCompleteReport };
     function route() {
         const hash = location.hash || '#/';
-        if (hash.startsWith('#/report')) {
-            showReport(new URLSearchParams(hash.split('?')[1] || ''));
-        } else if (hash.startsWith('#/name-report')) {
-            showNameReport(new URLSearchParams(hash.split('?')[1] || ''));
-        } else if (hash.startsWith('#/astro-report')) {
-            showAstroReport(new URLSearchParams(hash.split('?')[1] || ''));
-        } else {
-            showHome('', hash === '#name' ? 'name' : hash === '#astro' ? 'astro' : 'dasha');
-        }
+        const [path, query] = hash.split('?');
+        const params = new URLSearchParams(query || '');
+        const view = VIEWS[path.replace(/^#\//, '')];
+        if (view) view(params);
+        else showHome('', params.get('tab') || (hash === '#name' ? 'name' : hash === '#astro' ? 'astro' : 'complete'));
     }
     window.addEventListener('hashchange', route);
     route();

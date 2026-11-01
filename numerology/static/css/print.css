@@ -1,29 +1,30 @@
-/* Print: the screen theme is dark, so remap the tokens to a light palette and hide the chrome. */
+/* Print: always the light palette, whatever the screen mode, and no screen chrome. */
 @page { size: A4; margin: 14mm 12mm; }
 
-:root {
-    --bg: #fff; --bg-2: #fff; --surface: #fff; --surface-2: #fff; --surface-3: #fff;
-    --gold: #a9802c; --gold-light: #8a6420; --gold-dark: #8a6420; --gold-glow: rgba(169, 128, 44, .15);
-    --violet: #5f4b9e; --violet-soft: rgba(95, 75, 158, .1);
-    --text: #1d1726; --text-2: #3f3749; --text-3: #7a7284;
-    --line: #d9cfb3; --line-soft: #e6e1ea;
+:root, :root[data-mode="dark"] {
+    --bg: #fff; --paper: #fff; --tint: #fff;
+    --ink: #22261f; --ink-2: #454b3f; --muted: #7c7d70;
+    --accent: #4f6349; --accent-2: #a05a42; --accent-soft: #eef2ea; --accent-soft-2: #dfe7d8; --accent-2-soft: #f6ebe5; --ring: transparent;
+    --badge: #cfdcc5; --badge-2: #ecd2c2; --on-badge: #1f241c;
+    --good: #3f7d4f; --info: #3f6f9a; --warn: #a86a25; --bad: #b0473c;
+    --line: #dcd8cc; --line-strong: #bdb8a8; --shadow: 0, 0, 0;
+    color-scheme: light;
 }
 body.report { background: #fff; }
-.cosmos, .toolbar, .no-print, .edit-hint { display: none !important; }
+.aurora, .grain, #dust, .toolbar, .no-print, .edit-hint { display: none !important; }
 .matrix-card, .option-card, .analysis { background: #fff; }
 .matrix-card, .option-card, .analysis li { break-inside: avoid; page-break-inside: avoid; }
 .doc { max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: #fff; font-size: 12.5px; }
-.cover-title { -webkit-text-fill-color: #1d1726; background: none; }
 .glance-card, .howto, .year-card, .callout, .chip, .ytag, .weekday-legend li, .lo-shu .cell { background: #fff; }
-.lo-shu .cell { border-color: #b9ad8c; }
-.lo-shu .cell.filled { background: #f6ecd2; }
-.lo-shu .cell.strong { background: #eedbA6; }
+.lo-shu .cell { border-color: #bdb8a8; }
+.lo-shu .cell.filled { background: #eef2ea; }
+.lo-shu .cell.strong { background: #dfe7d8; }
 .lo-shu .cell.empty .cell-val { color: #d8d2c4; }
-.cell-val { color: #1d1726; }
-.table tr.is-current td, .prat-list li.active, .year-head, .callout, .table thead th { background: #f6ecd2; }
-.tl-seg, .prat-seg, .num-badge, .pill, .tag-now, .chip-result { color: #140c22; }
-.tl-seg.current { outline-color: #1d1726; }
-.prat-seg.active { outline-color: #1d1726; }
+.cell-val { color: #22261f; }
+.table tr.is-current td, .prat-list li.active, .year-head, .callout, .table thead th { background: #eef2ea; }
+.tl-seg, .prat-seg, .num-badge, .pill, .tag-now, .chip-result { color: #1f241c; }
+.tl-seg.current { outline-color: #22261f; }
+.prat-seg.active { outline-color: #22261f; }
 .editable { border-color: transparent; background: transparent; padding-left: 0; padding-right: 0; }
 .editable:empty { display: none; }
 
@@ -34,9 +35,11 @@ body.report { background: #fff; }
 .sec { margin-bottom: 28px; }
 .year-card { margin-bottom: 10px; }
 .letter-chip, .working { background: #fff; }
-.chaldean .used { background: #a9802c; color: #fff; }
+.chaldean .used { background: #cfdcc5; color: #1f241c; }
 .n-frame { fill: #fff; }
 .south-grid td { background: #fff; }
 .dasha-block { background: #fff; }
 .dasha-block:not([open]) { display: none; }
 .prat-row details:not([open]) { display: none; }
+.part { break-inside: avoid; }
+.contents li { break-inside: avoid; }
