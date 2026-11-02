@@ -103,11 +103,11 @@ body.report .aurora { opacity: .45; }
 #dust { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
 /* ---------- Light / dark switch ---------- */
-.mode { flex-shrink: 0; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
+.mode, .round-btn { flex-shrink: 0; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
     border: 1px solid var(--line-strong); background: var(--paper); color: var(--accent);
     box-shadow: 0 8px 20px -14px rgba(var(--shadow), .45); transition: transform .3s, border-color .3s, background .7s; }
 .mode:hover { transform: rotate(-15deg) scale(1.06); border-color: var(--accent); }
-.mode svg { width: 16px; height: 16px; }
+.mode svg, .round-btn svg { width: 16px; height: 16px; }
 .mode .sun, :root[data-mode="dark"] .mode .moon { display: none; }
 :root[data-mode="dark"] .mode .sun { display: block; }
 
@@ -129,6 +129,10 @@ body.report .aurora { opacity: .45; }
 .pill svg { width: 15px; height: 15px; color: var(--accent); transition: transform .4s cubic-bezier(.3, 1.4, .5, 1); }
 .pill:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
 .pill:disabled svg { color: var(--muted); }
+/* Reset: a round icon button like the light / dark one; greyed out until something is typed */
+.round-btn:hover:not(:disabled) { border-color: var(--accent); }
+.round-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+#resetBtn svg { transition: transform .4s cubic-bezier(.3, 1.4, .5, 1); }
 #resetBtn:not(:disabled):hover svg { transform: rotate(-90deg); }
 #resetBtn.spin svg { animation: spin-back .6s cubic-bezier(.4, 0, .2, 1); }
 @keyframes spin-back { to { transform: rotate(-360deg); } }
@@ -319,8 +323,6 @@ body.report .aurora { opacity: .45; }
     .details .row { margin-bottom: 18px; }
     .choose h2 { font-size: 23px; }
     .pick { margin-top: 26px; }
-    .pill span { display: none; }
-    .pill { width: 34px; padding: 0; justify-content: center; }
     .bottom { margin-top: 22px; flex-direction: column; gap: 6px; }
     .headline { font-size: 26px; margin-bottom: 16px; }
     .wordmark { font-size: 19px; letter-spacing: 4px; }
