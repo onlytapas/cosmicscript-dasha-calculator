@@ -147,7 +147,7 @@ body.report .aurora { opacity: .45; }
 .details .f label, .details .f .lbl { font-size: 12px; margin-bottom: 5px; }
 .details .f input { font-size: 19px; height: 50px; padding: 0; }   /* one height, so every underline lines up */
 .details .split input { font-size: 24px; }
-.details .seg label { font-size: 15px; padding: 10px 0; }
+.details .seg label { font-size: 15px; padding: 10px 0; margin: 0; }   /* no field-label gap, so the highlight sits centred */
 .pick .choices { grid-template-rows: 1fr 1fr; }
 .pick .reading { justify-content: center; padding: 20px; }
 
