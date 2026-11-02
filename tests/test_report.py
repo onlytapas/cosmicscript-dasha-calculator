@@ -64,13 +64,13 @@ def test_home_page_renders(client):
     html = client.get("/").get_data(as_text=True)
     for label in ("Complete Reading", "Numerology", "Name Numerology", "Astrology · Kundli", "First name", "Middle name", "Last name"):
         assert label in html
-    assert 'value="complete" checked' in html and "Suggested name" not in html
+    assert 'class="reading was" name="reading" value="complete"' in html and "Suggested name" not in html
 
 
 @pytest.mark.parametrize("tab, reading", [("dasha", "numerology"), ("numerology", "numerology"), ("name", "name"), ("astro", "astro"), ("x", "complete")])
 def test_home_preselects_the_reading(client, tab, reading):
     html = client.get(f"/?tab={tab}").get_data(as_text=True)
-    assert f'value="{reading}" checked' in html
+    assert f'class="reading was" name="reading" value="{reading}"' in html
 
 
 def test_report_page_renders(client):

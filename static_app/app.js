@@ -14,10 +14,27 @@
     const nameBuilder = window.CosmicName.createNameBuilder(DATA, engine, builder.formatDateLong);
 
     // Astrology needs the Swiss Ephemeris WebAssembly build; load it on first use.
-    DATA.ASTRO.PLACES = DATA.ASTRO.PLACES_RAW.map((p) => ({
-        name: p[0], region: p[1], country: p[2], latitude: p[3], longitude: p[4], timezone: p[5],
-        label: [p[0]].concat(p[1] ? [p[1]] : []).concat([p[2]]).join(', '),
-    }));
+    // Accents are dropped so 'Kānchrāpāra' matches what people type (mirrors fold in numerology/astro/places.py).
+    const fold = (text) => String(text).normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+    const makePlace = (name, region, country, latitude, longitude, timezone) => ({
+        name, region, country, latitude, longitude, timezone,
+        label: [name].concat(region ? [region] : []).concat(country ? [country] : []).join(', '),
+    });
+    DATA.ASTRO.PLACES = DATA.ASTRO.PLACES_RAW.map((p) => makePlace(fold(p[0]), fold(p[1]), p[2], p[3], p[4], p[5]));
+    DATA.ASTRO.fold = fold;
+
+    // A place found by the online search, which sends its coordinates and time zone with the label
+    // (mirrors place_from_coordinates in numerology/astro/places.py).
+    function placeFromCoordinates(label, latitude, longitude, timezone) {
+        const lat = Number(latitude), lon = Number(longitude);
+        if (latitude === null || longitude === null || !timezone) return null;
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+        try { new Intl.DateTimeFormat('en', { timeZone: timezone }); } catch (e) { return null; }
+        const parts = fold(label).split(',').map((x) => x.trim()).filter(Boolean);
+        if (!parts.length) return null;
+        const round = (x) => Math.round(x * 1e4) / 1e4;
+        return makePlace(parts[0], parts.slice(1, -1).join(', '), parts.length > 1 ? parts[parts.length - 1] : '', round(lat), round(lon), timezone);
+    }
     let astroPromise = null;
     function loadAstro() {
         if (!astroPromise) {
@@ -135,7 +152,8 @@
         const hour = Number(params.get('hour')), minute = Number(params.get('minute'));
         if (!params.get('hour') || !params.get('minute') || Number.isNaN(hour) || Number.isNaN(minute)) throw new Error('Please enter the time of birth (hours and minutes).');
         if (hour < 0 || hour > 23 || minute < 0 || minute > 59) throw new Error('Time of birth must be between 00:00 and 23:59.');
-        const place = placeIndex.findPlace(params.get('place') || '');
+        const label = params.get('place') || '';
+        const place = placeIndex.findPlace(label) || placeFromCoordinates(label, params.get('lat'), params.get('lon'), params.get('tz'));
         if (!place) throw new Error('Please choose the place of birth from the list of suggestions.');
         return { birth, time: { hour, minute }, place };
     }

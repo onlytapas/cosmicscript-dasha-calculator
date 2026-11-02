@@ -1,5 +1,8 @@
 /*
- * Front page: choose a reading, fill only the details it needs, open the report.
+ * Front page: client details once, then tap any reading to open it.
+ * The details stay filled in for this browser tab (sessionStorage), so the consultant can
+ * go back and open the next reading without typing them again. "Save" keeps a client in
+ * this browser (localStorage) for later visits. Nothing leaves the device.
  * Exposed as window.initHomePage so the static build can call it after rendering.
  * Report links start with window.cosmicRouteBase ('#/' in the static build) or '/' (Flask).
  */
@@ -9,14 +12,13 @@ window.initHomePage = function () {
     const base = window.cosmicRouteBase || '/';
     const $ = (id) => document.getElementById(id);
 
-    // Which fields each reading shows. Every field shown is required except the middle name.
+    // Astrology and the complete reading also need the time and place of birth.
     const READINGS = {
-        complete:   { title: 'Complete Reading',   button: 'Generate complete reading',  route: 'complete-report', fields: ['first', 'middle', 'last', 'dob', 'gender', 'time', 'place'] },
-        numerology: { title: 'Numerology',         button: 'Generate numerology report', route: 'report',          fields: ['first', 'middle', 'last', 'dob'] },
-        name:       { title: 'Name Numerology',    button: 'Generate name report',       route: 'name-report',     fields: ['first', 'middle', 'last', 'dob'] },
-        astro:      { title: 'Astrology · Kundli', button: 'Generate birth chart',       route: 'astro-report',    fields: ['first', 'middle', 'last', 'dob', 'gender', 'time', 'place'] },
+        complete:   { title: 'Complete Reading',   route: 'complete-report', chart: true },
+        numerology: { title: 'Numerology',         route: 'report' },
+        name:       { title: 'Name Numerology',    route: 'name-report' },
+        astro:      { title: 'Astrology · Kundli', route: 'astro-report',    chart: true },
     };
-    const current = () => (form.querySelector('input[name="reading"]:checked') || {}).value || 'complete';
 
     // ---- Headline appears word by word
     const headline = form.querySelector('.headline');
@@ -37,23 +39,6 @@ window.initHomePage = function () {
         wrap(headline);
     }
 
-    // ---- Show the fields the chosen reading needs
-    function show(reading, first) {
-        const r = READINGS[reading];
-        form.querySelectorAll('.f').forEach((f) => f.classList.toggle('skip', !r.fields.includes(f.dataset.f)));
-        form.querySelectorAll('.row').forEach((row) => row.classList.toggle('collapsed', [...row.querySelectorAll('.f')].every((f) => f.classList.contains('skip'))));
-        $('cardTitle').innerHTML = '<span></span>';
-        $('cardTitle').firstChild.textContent = r.title;
-        const label = $('goText');
-        label.textContent = r.button;
-        label.classList.remove('swap'); void label.offsetWidth; label.classList.add('swap');
-        $('formError').hidden = true;
-        if (!first && window.innerWidth < 700) form.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    form.querySelectorAll('input[name="reading"]').forEach((input) => input.addEventListener('change', () => show(input.value)));
-    if (!form.querySelector('input[name="reading"]:checked')) form.querySelector('input[value="complete"]').checked = true;
-    show(current(), true);
-
     // ---- Cards: gentle 3D tilt and a light that follows the pointer
     form.querySelectorAll('.reading').forEach((card) => {
         card.addEventListener('pointermove', (e) => {
@@ -69,80 +54,213 @@ window.initHomePage = function () {
         card.addEventListener('pointerleave', () => { card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg'); });
     });
 
-    // ---- Button ripple where it is pressed
-    const go = $('go');
-    go.addEventListener('pointerdown', (e) => {
-        const r = go.getBoundingClientRect(), size = Math.max(r.width, r.height) / 2;
-        const s = document.createElement('span');
-        s.className = 'ripple';
-        s.style.width = s.style.height = size + 'px';
-        s.style.left = (e.clientX - r.left - size / 2) + 'px';
-        s.style.top = (e.clientY - r.top - size / 2) + 'px';
-        go.appendChild(s);
-        setTimeout(() => s.remove(), 700);
-    });
-
     // ---- Typing: digits only in number boxes, jump to the next box when full
     function autoAdvance(ids) {
         ids.forEach((id, i) => {
             const el = $(id), next = $(ids[i + 1]);
             el.addEventListener('input', () => {
                 el.value = el.value.replace(/\D/g, '');
-                el.classList.remove('invalid');
                 if (next && el.value.length >= el.maxLength) next.focus();
             });
         });
     }
     autoAdvance(['day', 'month', 'year']);
     autoAdvance(['hour', 'minute']);
-    form.querySelectorAll('input[type="text"], input:not([type])').forEach((el) => el.addEventListener('input', () => el.classList.remove('invalid')));
+    autoAdvance(['askHour', 'askMinute']);
+    document.querySelectorAll('.f input').forEach((el) => el.addEventListener('input', () => el.classList.remove('invalid')));
 
-    // ---- Place suggestions: window.cosmicPlaceSearch (static build) or the /places endpoint (Flask)
-    const place = $('place'), list = $('place-suggestions');
-    let timer = null;
-    async function lookup(q) {
+    // ---- Place suggestions. The built-in list (window.cosmicPlaceSearch in the static build, /places in Flask)
+    // answers at once; a free online search of OpenStreetMap (Photon) then adds the smaller towns and
+    // villages. Only the typed place name is sent. A place from the online search carries its
+    // coordinates and time zone in the hidden ...Geo field, as "lat,lon,timezone".
+    const fold = (text) => text.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+    const SETTLEMENTS = ['city', 'town', 'village', 'hamlet', 'suburb', 'municipality', 'borough', 'locality'];
+    async function localPlaces(q) {
         if (window.cosmicPlaceSearch) return window.cosmicPlaceSearch(q);
         const res = await fetch('/places?q=' + encodeURIComponent(q));
         return res.json();
     }
-    function suggest(items) {
-        list.innerHTML = '';
-        items.forEach((label) => {
-            const li = document.createElement('li');
-            li.textContent = label;
-            li.addEventListener('mousedown', (e) => { e.preventDefault(); place.value = label; list.hidden = true; place.classList.remove('invalid'); });
-            list.appendChild(li);
-        });
-        list.hidden = items.length === 0;
-    }
-    place.addEventListener('input', () => {
-        clearTimeout(timer);
-        const q = place.value.trim();
-        if (q.length < 2) { list.hidden = true; return; }
-        timer = setTimeout(async () => suggest(await lookup(q)), 120);
-    });
-    place.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
-
-    // ---- Remember what was typed, so a message from the report page does not lose it
-    const SAVE = 'cosmicscript-form';
-    const fieldIds = ['first', 'middle', 'last', 'day', 'month', 'year', 'hour', 'minute', 'place'];
-    function save() {
-        const data = { reading: current(), gender: form.querySelector('input[name="gender"]:checked').value };
-        fieldIds.forEach((id) => { data[id] = $(id).value; });
-        try { sessionStorage.setItem(SAVE, JSON.stringify(data)); } catch (e) { /* not available */ }
-    }
-    if (form.querySelector('.form-error:not([hidden])')) {
+    async function onlinePlaces(q) {
         try {
-            const data = JSON.parse(sessionStorage.getItem(SAVE) || 'null');
-            if (data) {
-                fieldIds.forEach((id) => { $(id).value = data[id] || ''; });
-                const g = form.querySelector(`input[name="gender"][value="${data.gender}"]`);
-                if (g) g.checked = true;
-            }
-        } catch (e) { /* ignore */ }
+            const res = await fetch('https://photon.komoot.io/api/?osm_tag=place&limit=15&lang=en&lat=22&lon=79&q='
+                + encodeURIComponent(fold(q).split(',')[0].trim()), { signal: AbortSignal.timeout(6000) });
+            const found = (await res.json()).features || [];
+            const places = found.map((f) => ({ p: f.properties, at: f.geometry.coordinates }))
+                .filter(({ p }) => SETTLEMENTS.includes(p.osm_value) && p.name && p.countrycode)
+                .map(({ p, at }) => ({
+                    key: [p.name, p.state, p.countrycode].map((x) => fold(x || '').toLowerCase()).join('|'),
+                    label: [p.name, p.county || p.district, p.state, p.countrycode].filter(Boolean).map(fold).join(', '),
+                    lat: at[1], lon: at[0], country: p.countrycode,
+                }));
+            return places.filter((x) => x.country === 'IN').concat(places.filter((x) => x.country !== 'IN'));   // India first
+        } catch (e) { return []; }                          // offline or blocked: the built-in list still works
     }
+    // The chart needs the place's time zone: all of India is on IST; elsewhere ask Open-Meteo for the coordinates.
+    async function timeZone(place) {
+        if (place.country === 'IN') return 'Asia/Kolkata';
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&timezone=auto&forecast_days=1`,
+                { signal: AbortSignal.timeout(6000) });
+            return (await res.json()).timezone || '';
+        } catch (e) { return ''; }
+    }
+    let geoPending = Promise.resolve();                     // the time-zone lookup for the place just picked
+    function placeSuggestions(input, list, geo) {
+        let timer = null;
+        function suggest(items) {
+            list.innerHTML = '';
+            items.forEach((item) => {
+                const li = document.createElement('li');
+                li.textContent = item.label;
+                li.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    input.value = item.label; geo.value = ''; list.hidden = true; input.classList.remove('invalid');
+                    if (item.lat !== undefined) {
+                        geoPending = timeZone(item).then((tz) => {
+                            if (input.value === item.label && tz) geo.value = [item.lat, item.lon, tz].join(',');
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+                    }
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                list.appendChild(li);
+            });
+            if (items.some((item) => item.lat !== undefined)) {
+                const src = document.createElement('li');
+                src.className = 'src'; src.textContent = 'More places: © OpenStreetMap contributors';
+                list.appendChild(src);
+            }
+            list.hidden = items.length === 0;
+        }
+        input.addEventListener('input', () => {
+            geo.value = '';
+            clearTimeout(timer);
+            const q = input.value.trim();
+            if (q.length < 2) { list.hidden = true; return; }
+            timer = setTimeout(async () => {
+                const local = (await localPlaces(q)).slice(0, 8).map((label) => ({ label }));
+                if (input.value.trim() !== q) return;
+                suggest(local);
+                if (q.length < 3) return;
+                // Skip what the built-in list already has (it gives no state outside India), and exact repeats
+                const seen = new Set();
+                local.forEach((p) => {
+                    const [name, ...rest] = p.label.toLowerCase().split(', ');
+                    seen.add([name, rest.slice(0, -1).join(', '), rest[rest.length - 1]].join('|'));
+                    if (rest.length === 1) seen.add(name + '|' + rest[0]);
+                });
+                const extra = (await onlinePlaces(q)).filter((p) => {
+                    if (seen.has(p.key) || seen.has(p.label.toLowerCase()) || seen.has(p.key.split('|')[0] + '|' + p.key.split('|')[2])) return false;
+                    seen.add(p.label.toLowerCase());
+                    return true;
+                });
+                if (input.value.trim() === q && document.activeElement === input) suggest(local.concat(extra).slice(0, 12));
+            }, 150);
+        });
+        input.addEventListener('blur', () => setTimeout(() => { list.hidden = true; }, 150));
+    }
+    placeSuggestions($('place'), $('place-suggestions'), $('placeGeo'));
+    placeSuggestions($('askPlace'), $('askPlace-suggestions'), $('askPlaceGeo'));
 
-    // ---- Submit: check the visible fields, then open the report
+    // ---- The details stay for this tab: restored every time the front page opens
+    const SESSION = 'cosmicscript-form';
+    const fieldIds = ['first', 'middle', 'last', 'day', 'month', 'year', 'hour', 'minute', 'place', 'placeGeo'];
+    const v = (id) => $(id).value.trim();
+    const gender = () => form.querySelector('input[name="gender"]:checked').value;
+    function read() {
+        const data = { gender: gender() };
+        fieldIds.forEach((id) => { data[id] = v(id); });
+        return data;
+    }
+    function fill(data) {
+        fieldIds.forEach((id) => { $(id).value = data[id] || ''; $(id).classList.remove('invalid'); });
+        form.querySelector(`input[name="gender"][value="${data.gender === 'male' ? 'male' : 'female'}"]`).checked = true;
+        remember();
+    }
+    function remember() {
+        try { sessionStorage.setItem(SESSION, JSON.stringify(read())); } catch (e) { /* storage blocked */ }
+        $('resetBtn').disabled = fieldIds.every((id) => !v(id));
+    }
+    try {
+        const data = JSON.parse(sessionStorage.getItem(SESSION) || 'null');
+        if (data) fill(data);
+    } catch (e) { /* nothing stored */ }
+    form.addEventListener('input', remember);
+    form.addEventListener('change', remember);
+    remember();
+
+    // ---- Reset: clear the details and start a new client
+    $('resetBtn').addEventListener('click', () => {
+        if (!confirm('Clear the client details and start again?')) return;
+        const btn = $('resetBtn');
+        btn.classList.add('spin');
+        setTimeout(() => btn.classList.remove('spin'), 600);
+        fill({});
+        form.querySelectorAll('.form-error').forEach((x) => { x.hidden = true; });
+        form.querySelectorAll('.reading.was').forEach((x) => x.classList.remove('was'));
+        $('first').focus({ preventScroll: true });
+    });
+
+    // ---- Saved clients: kept in this browser (localStorage) until deleted here or the browser data is cleared
+    const SAVED = 'cosmicscript-clients';
+    const fullName = (d) => [d.first, d.middle, d.last].filter(Boolean).join(' ');
+    const dob = (d) => [d.day, d.month, d.year].every(Boolean) ? `${d.day.padStart(2, '0')}/${d.month.padStart(2, '0')}/${d.year}` : '';
+    function loadSaved() {
+        try { return JSON.parse(localStorage.getItem(SAVED) || '[]'); } catch (e) { return []; }
+    }
+    function storeSaved(list) {
+        try { localStorage.setItem(SAVED, JSON.stringify(list)); return true; } catch (e) { return false; }
+    }
+    function drawSaved() {
+        const list = loadSaved(), ul = $('savedList');
+        $('savedCount').textContent = list.length;
+        $('savedToggle').disabled = list.length === 0;
+        ul.innerHTML = '';
+        list.forEach((d, i) => {
+            const li = document.createElement('li');
+            const load = document.createElement('button');
+            load.type = 'button'; load.className = 'saved-load';
+            load.innerHTML = '<b></b><span></span>';
+            load.firstChild.textContent = fullName(d);
+            load.lastChild.textContent = dob(d);
+            load.addEventListener('click', () => { fill(d); toggleSaved(false); flash('Loaded ' + fullName(d)); });
+            const del = document.createElement('button');
+            del.type = 'button'; del.className = 'saved-del'; del.textContent = '×';
+            del.setAttribute('aria-label', 'Delete ' + fullName(d));
+            del.addEventListener('click', (e) => {
+                if (!confirm('Delete ' + fullName(d) + ' from this browser?')) return;
+                e.stopPropagation();
+                list.splice(i, 1); storeSaved(list); drawSaved();
+                if (!list.length) toggleSaved(false);
+            });
+            li.append(load, del);
+            ul.appendChild(li);
+        });
+    }
+    function toggleSaved(open) {
+        $('savedList').hidden = !open;
+        $('savedToggle').setAttribute('aria-expanded', String(open));
+    }
+    function flash(text) {
+        const btn = $('saveClient'), label = btn.querySelector('span');
+        btn.classList.add('done'); label.textContent = text.length > 22 ? 'Saved' : text;
+        setTimeout(() => { btn.classList.remove('done'); label.textContent = 'Save'; }, 1600);
+    }
+    $('savedToggle').addEventListener('click', (e) => { e.stopPropagation(); toggleSaved($('savedList').hidden); });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.dropdown')) toggleSaved(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('savedList').hidden) { toggleSaved(false); $('savedToggle').focus(); } });
+    $('saveClient').addEventListener('click', () => {
+        const d = read();
+        if (!d.first || !d.last) return fail('Enter at least the first and last name to save a client.', $(d.first ? 'last' : 'first'));
+        const list = loadSaved().filter((x) => !(fullName(x).toLowerCase() === fullName(d).toLowerCase() && dob(x) === dob(d)));
+        list.unshift(d);
+        if (!storeSaved(list)) return fail('This browser is not allowing anything to be saved (private window?).');
+        drawSaved();
+        flash('Saved');
+    });
+    drawSaved();
+
+    // ---- Open a reading: check the details it needs, ask for time and place if missing
     function fail(message, el) {
         const box = $('formError');
         box.textContent = message;
@@ -150,28 +268,72 @@ window.initHomePage = function () {
         form.querySelectorAll('.form-error').forEach((x) => { if (x !== box) x.remove(); });
         if (el) { el.classList.add('invalid'); el.focus(); }
     }
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const r = READINGS[current()];
-        const need = (f) => r.fields.includes(f);
-        const v = (id) => $(id).value.trim();
-
-        if (!v('first')) return fail('Please enter the first name.', $('first'));
-        if (!v('last')) return fail('Please enter the last name.', $('last'));
-        for (const id of ['day', 'month', 'year']) if (!v(id)) return fail('Please enter the full date of birth.', $(id));
-        if (need('time')) for (const id of ['hour', 'minute']) if (!v(id)) return fail('Please enter the time of birth (24-hour clock).', $(id));
-        if (need('place') && !v('place')) return fail('Please enter the place of birth and choose it from the list.', place);
-
+    async function open(reading) {
+        await geoPending;
+        const r = READINGS[reading];
         const params = new URLSearchParams({
             name: [v('first'), v('middle'), v('last')].filter(Boolean).join(' '),
             day: v('day'), month: v('month'), year: v('year'),
         });
-        if (need('gender')) params.set('gender', form.querySelector('input[name="gender"]:checked').value);
-        if (need('time')) { params.set('hour', v('hour')); params.set('minute', v('minute')); }
-        if (need('place')) { params.set('place', v('place')); params.set('style', 'north'); }
-        save();
+        if (r.chart) {
+            params.set('gender', gender());
+            params.set('hour', v('hour')); params.set('minute', v('minute'));
+            params.set('place', v('place')); params.set('style', 'north');
+            const [lat, lon, tz] = v('placeGeo').split(',');
+            if (tz) { params.set('lat', lat); params.set('lon', lon); params.set('tz', tz); }
+        }
+        remember();
         if (base === '/') location.href = '/' + r.route + '?' + params.toString();
         else location.hash = base + r.route + '?' + params.toString();
+    }
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const reading = (event.submitter && event.submitter.value) || 'complete';
+        if (!READINGS[reading]) return;
+        $('formError').hidden = true;
+        if (!v('first')) return fail('Please enter the first name.', $('first'));
+        if (!v('last')) return fail('Please enter the last name.', $('last'));
+        for (const id of ['day', 'month', 'year']) if (!v(id)) return fail('Please enter the full date of birth.', $(id));
+        const missing = READINGS[reading].chart && (!v('hour') || !v('minute') || !v('place'));
+        if (missing) ask(reading); else open(reading);
+    });
+
+    // ---- The pop-up for the time and place of birth
+    const dialog = $('askDialog');
+    function ask(reading) {
+        const needTime = !v('hour') || !v('minute'), needPlace = !v('place');
+        $('askKicker').textContent = READINGS[reading].title;
+        $('askText').textContent = 'The birth chart is drawn for the exact moment and place of birth. Please add the '
+            + (needTime && needPlace ? 'time and place' : needTime ? 'time' : 'place') + ' of birth.';
+        dialog.querySelector('[data-ask="time"]').hidden = !needTime;
+        dialog.querySelector('[data-ask="place"]').hidden = !needPlace;
+        $('askHour').value = v('hour'); $('askMinute').value = v('minute'); $('askPlace').value = ''; $('askPlaceGeo').value = '';
+        $('askError').hidden = true;
+        dialog.dataset.reading = reading;
+        dialog.showModal();
+        (needTime ? (v('hour') ? $('askMinute') : $('askHour')) : $('askPlace')).focus();
+    }
+    function askFail(message, el) {
+        $('askError').textContent = message; $('askError').hidden = false;
+        el.classList.add('invalid'); el.focus();
+    }
+    $('askCancel').addEventListener('click', () => dialog.close());
+    $('askForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await geoPending;
+        const timeShown = !dialog.querySelector('[data-ask="time"]').hidden;
+        const placeShown = !dialog.querySelector('[data-ask="place"]').hidden;
+        if (timeShown) {
+            for (const id of ['askHour', 'askMinute']) if (!$(id).value.trim()) return askFail('Please enter the time of birth (24-hour clock).', $(id));
+            $('hour').value = $('askHour').value.trim(); $('minute').value = $('askMinute').value.trim();
+        }
+        if (placeShown) {
+            if (!$('askPlace').value.trim()) return askFail('Please enter the place of birth and choose it from the list.', $('askPlace'));
+            $('place').value = $('askPlace').value.trim();
+            $('placeGeo').value = $('askPlaceGeo').value;
+        }
+        dialog.close();
+        open(dialog.dataset.reading);
     });
 
     startDust();

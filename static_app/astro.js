@@ -253,7 +253,7 @@
         }
 
         function searchPlaces(query, limit) {
-            const q = (query || '').trim().toLowerCase();
+            const q = A.fold(query || '').split(',')[0].trim().toLowerCase();
             if (!q) return [];
             const starts = [], contains = [];
             for (const p of A.PLACES) {
@@ -262,7 +262,7 @@
             }
             return starts.concat(contains).slice(0, limit || 12);
         }
-        function findPlace(label) { return A.PLACES.find((p) => p.label === label) || null; }
+        function findPlace(label) { label = A.fold(label); return A.PLACES.find((p) => p.label === label) || null; }
 
         return { buildAstroReport, searchPlaces, findPlace, describeLongitude, vimshottari, panchang };
     }

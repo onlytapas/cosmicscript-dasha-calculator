@@ -10,7 +10,7 @@ from datetime import datetime
 import pytest
 
 from numerology import create_app
-from numerology.astro.places import find_place, search_places
+from numerology.astro.places import find_place, place_from_coordinates, search_places
 from numerology.astro.report import build_astro_report
 from numerology.astro.vedic import describe_longitude, house_from, panchang, vimshottari
 
@@ -40,6 +40,23 @@ def test_place_lookup():
     assert KOLKATA.timezone == "Asia/Kolkata" and abs(KOLKATA.latitude - 22.56) < 0.05
     assert [p.label for p in search_places("kolk")] == ["Kolkata, West Bengal, IN"]
     assert search_places("") == []
+
+
+def test_place_search_ignores_accents():
+    # GeoNames spells it Kānchrāpāra; people type Kanchrapara.
+    assert [p.label for p in search_places("kanchrapara")] == ["Kanchrapara, West Bengal, IN"]
+    assert [p.label for p in search_places("Kanchrapara, West Bengal")] == ["Kanchrapara, West Bengal, IN"]
+    assert find_place("Kānchrāpāra, West Bengal, IN") == find_place("Kanchrapara, West Bengal, IN") is not None
+    assert all(p.name.isascii() for p in search_places("ali"))
+
+
+def test_place_from_online_search():
+    place = place_from_coordinates("Halisahar, West Bengal, IN", "22.9323", "88.4189", "Asia/Kolkata")
+    assert (place.name, place.region, place.country, place.timezone) == ("Halisahar", "West Bengal", "IN", "Asia/Kolkata")
+    assert place.label == "Halisahar, West Bengal, IN"
+    for bad in (("x", "91", "0", "Asia/Kolkata"), ("x", "0", "181", "Asia/Kolkata"), ("x", "0", "0", "Not/AZone"),
+                ("x", "nan", "0", "Asia/Kolkata"), ("x", None, "0", "Asia/Kolkata"), ("", "0", "0", "Asia/Kolkata")):
+        assert place_from_coordinates(*bad) is None
 
 
 def test_birth_moment_conversion(sample):
@@ -122,3 +139,6 @@ def test_astro_routes(client):
     assert "chart-north" in html
     response = client.get("/astro-report?day=29&month=1&year=1990&hour=10&minute=30&place=Nowhere")
     assert response.status_code == 302 and "tab=astro" in response.headers["Location"]
+    html = client.get("/astro-report?day=29&month=1&year=1990&hour=10&minute=30&place=Halisahar,%20West%20Bengal,%20IN"
+                      "&lat=22.9323&lon=88.4189&tz=Asia/Kolkata").get_data(as_text=True)
+    assert "Vedic Birth Chart" in html and "Halisahar, West Bengal, IN" in html

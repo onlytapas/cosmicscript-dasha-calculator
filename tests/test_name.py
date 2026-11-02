@@ -171,7 +171,7 @@ def test_home_shows_name_tab_errors(client):
     response = client.get("/name-report?name=")
     assert response.status_code == 302 and "tab=name" in response.headers["Location"]
     html = client.get("/?tab=name&error=Please+enter+a+name").get_data(as_text=True)
-    assert 'value="name" checked' in html and "Please enter a name" in html
+    assert 'class="reading was" name="reading" value="name"' in html and "Please enter a name" in html
 
 
 def test_name_report_has_suggested_spellings_box(client):

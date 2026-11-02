@@ -1,6 +1,6 @@
-{# Report toolbar. Set before including: tb_title, tb_back (reading to preselect on the front page), tb_chart (current chart style, or empty). #}
+{# Report toolbar. Set before including: tb_title, tb_back (reading to highlight on the front page), tb_chart (current chart style, or empty). #}
 <nav class="toolbar no-print" aria-label="Report actions">
-    <a href="{{ url_for('main.home') }}?tab={{ tb_back }}" class="tb-btn" data-home="{{ tb_back }}">← New reading</a>
+    <a href="{{ url_for('main.home') }}?tab={{ tb_back }}" class="tb-btn" data-home="{{ tb_back }}" title="Back to the client details">← Back</a>
     <span class="tb-title">{{ tb_title }}</span>
     <div class="tb-actions">
         {% if tb_chart %}<button type="button" class="tb-btn" id="styleToggle" data-style="{{ 'south' if tb_chart == 'north' else 'north' }}">{{ 'South Indian chart' if tb_chart == 'north' else 'North Indian chart' }}</button>{% endif %}

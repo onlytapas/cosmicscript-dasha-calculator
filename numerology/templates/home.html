@@ -8,63 +8,93 @@
 <div class="page">
     <header class="top rise" style="--d:0">
         <a class="wordmark" href="{{ url_for('main.home') }}">Cosmic<span>Script</span></a>
-        {% include "_mode.html" %}
+        <div class="top-actions">
+            <button type="button" class="pill" id="resetBtn" title="Clear the client details and start again" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg><span>Reset</span></button>
+            {% include "_mode.html" %}
+        </div>
     </header>
 
     <form class="main" id="readingForm" novalidate autocomplete="off">
-        <section>
+        <div class="intro">
             <p class="eyebrow rise" style="--d:1">Numerology · Name · Astrology</p>
             <h1 class="headline">Every life is <em>written</em> in numbers and stars.</h1>
-            <div class="choose rise" style="--d:5"><p id="chooseLabel">Choose a reading</p><span>Tap a card to select</span></div>
-            <fieldset class="choices" role="radiogroup" aria-labelledby="chooseLabel">
-                <label class="reading" style="--i:0">
-                    <input type="radio" name="reading" value="complete" {{ 'checked' if reading == 'complete' else '' }}>
-                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><path class="d" d="M20 4l3.6 12.4L36 20l-12.4 3.6L20 36l-3.6-12.4L4 20l12.4-3.6z"/><path class="d" d="M32 6v5M29.5 8.5h5M8 30v4M6 32h4"/></svg></span><span class="r-tag">All in one</span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
-                    <span class="r-title">Complete Reading</span>
-                    <span class="r-desc">Numerology, name and birth chart together</span>
-                </label>
-                <label class="reading" style="--i:1">
-                    <input type="radio" name="reading" value="numerology" {{ 'checked' if reading == 'numerology' else '' }}>
-                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><rect class="d" x="6" y="6" width="28" height="28" rx="2"/><path class="d" d="M15.3 6v28M24.7 6v28M6 15.3h28M6 24.7h28"/><circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none"/><circle cx="10.6" cy="29.4" r="1.6" fill="currentColor" stroke="none"/><circle cx="29.4" cy="10.6" r="1.6" fill="currentColor" stroke="none"/></svg></span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
-                    <span class="r-title">Numerology</span>
-                    <span class="r-desc">Root and Destiny numbers, grid and Dasha periods</span>
-                </label>
-                <label class="reading" style="--i:2">
-                    <input type="radio" name="reading" value="name" {{ 'checked' if reading == 'name' else '' }}>
-                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><path class="d" d="M6 31l7.5-21L21 31M9 23.5h9"/><path class="d" d="M33 31v-9.5a4.5 4.5 0 0 0-8.5-2M33 25.5c-4.5 0-8.5.6-8.5 3.2 0 2.6 4.2 3.2 8.5-.7"/></svg></span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
-                    <span class="r-title">Name Numerology</span>
-                    <span class="r-desc">Name number, compatibility and name correction</span>
-                </label>
-                <label class="reading" style="--i:3">
-                    <input type="radio" name="reading" value="astro" {{ 'checked' if reading == 'astro' else '' }}>
-                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><rect class="d" x="6" y="6" width="28" height="28"/><path class="d" d="M6 6l28 28M34 6L6 34M20 6l14 14-14 14L6 20z"/></svg></span><span class="radio"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg></span></span>
-                    <span class="r-title">Astrology · Kundli</span>
-                    <span class="r-desc">Birth chart, planets and Vimshottari Dasha</span>
-                </label>
-            </fieldset>
+        </div>
+
+        <section class="details">
+            <div class="choose rise" style="--d:5">
+                <h2>Client details</h2>
+                <div class="saved">
+                    <button type="button" class="chip" id="saveClient" title="Keep these details in this browser"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Save</span></button>
+                    <div class="dropdown">
+                        <button type="button" class="chip drop" id="savedToggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="savedList" title="Saved clients"><span>Saved</span><b id="savedCount">0</b><svg class="caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+                        <ul class="drop-menu" id="savedList" hidden></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card rise" style="--d:5">
+                <div class="row">
+                    <div class="f"><label for="first">First name</label><input id="first" name="first" placeholder="As spelt" maxlength="40"></div>
+                    <div class="f"><label for="middle">Middle name</label><input id="middle" name="middle" placeholder="Optional" maxlength="40"></div>
+                    <div class="f"><label for="last">Last name</label><input id="last" name="last" placeholder="As spelt" maxlength="40"></div>
+                </div>
+                <div class="row">
+                    <div class="f"><span class="lbl" id="dobLabel">Date of birth</span><div class="split" role="group" aria-labelledby="dobLabel"><input id="day" name="day" placeholder="DD" inputmode="numeric" maxlength="2" aria-label="Day"><input id="month" name="month" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Month"><input id="year" name="year" class="yr" placeholder="YYYY" inputmode="numeric" maxlength="4" aria-label="Year"></div></div>
+                    <div class="f"><span class="lbl">Gender</span><div class="seg" role="radiogroup" aria-label="Gender"><label><input type="radio" name="gender" value="female" checked>Female</label><label><input type="radio" name="gender" value="male">Male</label></div></div>
+                </div>
+                <div class="row">
+                    <div class="f" style="flex-grow:.8"><span class="lbl" id="timeLabel">Time of birth <i>for astrology</i></span><div class="split" role="group" aria-labelledby="timeLabel"><input id="hour" name="hour" placeholder="HH" inputmode="numeric" maxlength="2" aria-label="Hour, 24-hour clock"><input id="minute" name="minute" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Minute"></div></div>
+                    <div class="f place-field"><label for="place">Place of birth <i>for astrology</i></label><input id="place" name="place" placeholder="Town or city" maxlength="120"><input type="hidden" id="placeGeo"><ul class="suggestions" id="place-suggestions" hidden></ul></div>
+                </div>
+                {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+                <p class="form-error" id="formError" role="alert" hidden></p>
+            </div>
         </section>
 
-        <section class="card rise" style="--d:6">
-            <p class="card-kicker">Client details</p>
-            <h2 class="card-title" id="cardTitle"></h2>
-            <div class="row">
-                <div class="f" data-f="first"><label for="first">First name</label><input id="first" name="first" placeholder="As spelt" maxlength="40"></div>
-                <div class="f" data-f="middle"><label for="middle">Middle name</label><input id="middle" name="middle" placeholder="Optional" maxlength="40"></div>
-                <div class="f" data-f="last"><label for="last">Last name</label><input id="last" name="last" placeholder="As spelt" maxlength="40"></div>
+        <section class="pick">
+            <div class="choose rise" style="--d:6"><h2>Open a reading</h2><span>Details stay filled in for the next one</span></div>
+            <div class="choices">
+                <button type="submit" class="reading{{ ' was' if reading == 'complete' else '' }}" name="reading" value="complete" style="--i:0">
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><path class="d" d="M20 4l3.6 12.4L36 20l-12.4 3.6L20 36l-3.6-12.4L4 20l12.4-3.6z"/><path class="d" d="M32 6v5M29.5 8.5h5M8 30v4M6 32h4"/></svg></span><span class="r-tag">All in one</span><span class="go-arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
+                    <span class="r-title">Complete Reading</span>
+                    <span class="r-desc">Numerology, name and birth chart together</span>
+                </button>
+                <button type="submit" class="reading{{ ' was' if reading == 'numerology' else '' }}" name="reading" value="numerology" style="--i:1">
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><rect class="d" x="6" y="6" width="28" height="28" rx="2"/><path class="d" d="M15.3 6v28M24.7 6v28M6 15.3h28M6 24.7h28"/><circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none"/><circle cx="10.6" cy="29.4" r="1.6" fill="currentColor" stroke="none"/><circle cx="29.4" cy="10.6" r="1.6" fill="currentColor" stroke="none"/></svg></span><span class="go-arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
+                    <span class="r-title">Numerology</span>
+                    <span class="r-desc">Root and Destiny numbers, grid and Dasha periods</span>
+                </button>
+                <button type="submit" class="reading{{ ' was' if reading == 'name' else '' }}" name="reading" value="name" style="--i:2">
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><path class="d" d="M6 31l7.5-21L21 31M9 23.5h9"/><path class="d" d="M33 31v-9.5a4.5 4.5 0 0 0-8.5-2M33 25.5c-4.5 0-8.5.6-8.5 3.2 0 2.6 4.2 3.2 8.5-.7"/></svg></span><span class="go-arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
+                    <span class="r-title">Name Numerology</span>
+                    <span class="r-desc">Name number, compatibility and name correction</span>
+                </button>
+                <button type="submit" class="reading{{ ' was' if reading == 'astro' else '' }}" name="reading" value="astro" style="--i:3">
+                    <span class="r-top"><span class="r-icon"><svg viewBox="0 0 40 40"><rect class="d" x="6" y="6" width="28" height="28"/><path class="d" d="M6 6l28 28M34 6L6 34M20 6l14 14-14 14L6 20z"/></svg></span><span class="go-arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></span>
+                    <span class="r-title">Astrology · Kundli</span>
+                    <span class="r-desc">Birth chart, planets and Vimshottari Dasha</span>
+                </button>
             </div>
-            <div class="row">
-                <div class="f" data-f="dob"><span class="lbl" id="dobLabel">Date of birth</span><div class="split" role="group" aria-labelledby="dobLabel"><input id="day" name="day" placeholder="DD" inputmode="numeric" maxlength="2" aria-label="Day"><input id="month" name="month" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Month"><input id="year" name="year" class="yr" placeholder="YYYY" inputmode="numeric" maxlength="4" aria-label="Year"></div></div>
-                <div class="f" data-f="gender"><span class="lbl">Gender</span><div class="seg" role="radiogroup" aria-label="Gender"><label><input type="radio" name="gender" value="female" checked>Female</label><label><input type="radio" name="gender" value="male">Male</label></div></div>
-            </div>
-            <div class="row">
-                <div class="f" data-f="time" style="flex-grow:.8"><span class="lbl" id="timeLabel">Time of birth</span><div class="split" role="group" aria-labelledby="timeLabel"><input id="hour" name="hour" placeholder="HH" inputmode="numeric" maxlength="2" aria-label="Hour, 24-hour clock"><input id="minute" name="minute" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Minute"></div></div>
-                <div class="f place-field" data-f="place"><label for="place">Place of birth</label><input id="place" name="place" placeholder="Town or city" maxlength="120"><ul class="suggestions" id="place-suggestions" hidden></ul></div>
-            </div>
-            {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
-            <p class="form-error" id="formError" role="alert" hidden></p>
-            <button type="submit" class="btn-3d" id="go"><span class="label" id="goText">Generate</span></button>
         </section>
     </form>
+
+    <dialog class="ask" id="askDialog" aria-labelledby="askTitle">
+        <form method="dialog" id="askForm" novalidate autocomplete="off">
+            <p class="card-kicker" id="askKicker"></p>
+            <h2 class="ask-title" id="askTitle">A birth chart needs a little more</h2>
+            <p class="ask-text" id="askText"></p>
+            <div class="row" data-ask="time">
+                <div class="f"><span class="lbl" id="askTimeLabel">Time of birth (24-hour)</span><div class="split" role="group" aria-labelledby="askTimeLabel"><input id="askHour" placeholder="HH" inputmode="numeric" maxlength="2" aria-label="Hour, 24-hour clock"><input id="askMinute" placeholder="MM" inputmode="numeric" maxlength="2" aria-label="Minute"></div></div>
+            </div>
+            <div class="row" data-ask="place">
+                <div class="f place-field"><label for="askPlace">Place of birth</label><input id="askPlace" placeholder="Town or city" maxlength="120"><input type="hidden" id="askPlaceGeo"><ul class="suggestions" id="askPlace-suggestions" hidden></ul></div>
+            </div>
+            <p class="form-error" id="askError" role="alert" hidden></p>
+            <div class="ask-actions">
+                <button type="button" class="pill" id="askCancel">Cancel</button>
+                <button type="submit" class="btn-3d" id="askGo"><span class="label">Continue</span></button>
+            </div>
+        </form>
+    </dialog>
 
     <footer class="bottom rise" style="--d:7">
         <span>© CosmicScript</span><span>Full view for you · Client view to share</span>
